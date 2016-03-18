@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.testdecode"
+    android:versionCode="1"
+    android:versionName="1.0" android:installLocation="preferExternal">
+
+    <uses-sdk
+        android:minSdkVersion="8"
+        android:targetSdkVersion="16" />
+
+ <!-- sd card -->
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	
+	<!-- camera -->
+	<uses-feature android:name="android.hardware.camera" />
+	<uses-permission android:name="android.permission.CAMERA" />
+	
+	<!-- autofocus -->
+	<uses-feature android:name="android.hardware.autofocus"/> 
+	
+	<!-- VIBRATE -->
+	<uses-permission android:name="android.permission.VIBRATE" />  
+	
+	<!-- flash-->
+    <uses-permission android:name="android.permission.FLASHLIGHT"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"></uses-permission>  
+    
+    <!-- net -->
+   <uses-permission android:name="android.permission.INTERNET"/>
+   <uses-permission  android:name="android.permission.ACCESS_NETWORK_STATE"/>
+   <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+   
+   
+   <!-- lock -->
+   <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <application
+        android:name="MyApplication"
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name="com.example.testdecode.MainActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+         <!-- （testDecode-->
+         <activity android:name="testdecode"
+        		  android:screenOrientation="landscape"
+                  android:label="@string/app_name2">
+        </activity>
+        
+                  <!-- （ScanResult） -->
+         <activity 
+             android:name="ScanResult"
+             android:label="Result"
+             android:screenOrientation="landscape"
+             >
+         </activity>
+    </application>
+
+</manifest>
