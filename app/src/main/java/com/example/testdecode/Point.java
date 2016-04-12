@@ -36,10 +36,10 @@ public class Point implements Comparable<Point>{
 
     public int compareTo(Point pb){
         if(this.distance<pb.distance)
-            return 1;
+            return -1;
         else if(this.distance==pb.distance)
             return 0;
         else
-            return -1;
+            return 1;
     }
 }

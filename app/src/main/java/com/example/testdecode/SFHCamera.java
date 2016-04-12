@@ -147,7 +147,7 @@ public class SFHCamera implements SurfaceHolder.Callback{
 				}
 				
 				mCamera.autoFocus(mAutoFocusCallBack);
-				Log.i("Camera","autofocus");
+//				Log.i("Camera","autofocus");
 			}
 			catch(Exception ex)
 			{
@@ -192,7 +192,7 @@ public class SFHCamera implements SurfaceHolder.Callback{
         {
            //if (success) 
             //{ 
-            	 Log.i("Camera","autofocus_success");
+//            	 Log.i("Camera","autofocus_success");
             	if(mCamera!=null)
             	{
                 	//mCamera.setOneShotPreviewCallback(previewCallback); 

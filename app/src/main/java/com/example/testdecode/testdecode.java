@@ -1,13 +1,18 @@
 package com.example.testdecode;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.sql.Date;
 import java.lang.Thread;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.ImageFormat;
 import com.google.zxing.Android.PlanarYUVLuminanceSource;
+import com.google.zxing.Android.RGBLuminanceSource;
+import com.google.zxing.Binarizer;
 import com.google.zxing.BinaryBitmap;
+import com.google.zxing.LuminanceSource;
 import com.google.zxing.NotFoundException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.common.HybridBinarizer;
@@ -27,6 +32,7 @@ import android.graphics.Matrix;
 import android.hardware.Camera;
 
 import android.media.AudioManager;
+import android.media.ImageReader;
 import android.os.Bundle;
 
 import android.util.DisplayMetrics;
@@ -49,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.regex.Pattern;
 
 
@@ -518,15 +525,8 @@ public class testdecode extends Activity implements OnClickListener, Runnable
     }
 
 	public String decodeBitMap(BinaryBitmap bitmap,Bitmap grayMap) throws NotFoundException {
+		//no result, then return "0"
 		int result= 0;
-//		int width= bitmap.getWidth();
-//		int height=bitmap.getHeight();
-		BitMatrix matrix= bitmap.getBlackMatrix();
-        int width=grayMap.getWidth();//548
-        int height=grayMap.getHeight();//502
-        int[] bits=matrix.bits;
-		Log.w("weight and height",""+grayMap.getWidth()+"|"+grayMap.getHeight());
-
         boolean[][] whetherChecked=new boolean[height][width];
         boolean[][] bitsBool=new boolean[height][width];
         float[][][] points=new float[20][20][2];
@@ -538,31 +538,10 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 		//now add find direction and chose edge line
 		ArrayList<Point> pointArrayList=new ArrayList<>();
 
-//        for(int i=0;i<matrix.height;i++) {
-//            for (int j = 0; j < matrix.rowSize; j++) {
-//                int tempInt = matrix.bits[i * matrix.rowSize + j];
-//                for (int k = 31; k > -1; k--) {
-//                    if (((tempInt >> k) & 1) == 1) {
-//                        bitsBool[i][j*32-k+31]=true;
-//                    } else
-//                        bitsBool[i][j*32-k+31]=false;
-//                }
-//            }
-//        }
-
         if(whetherCatch) {
-//            whetherCatch=false;
-//			for (int i = 0; i < bitmap.getBlackMatrix().height; i++) {
-//                String he="";
-//				for (int j = 0; j < bitmap.getBlackMatrix().rowSize; j++) {
-//					for(int k=0;k<32-Integer.toBinaryString(bitmap.getBlackMatrix().bits[i * bitmap.getBlackMatrix().rowSize + j]).length();k++)
-//						he+="0";
-//					he = he + Integer.toBinaryString(bitmap.getBlackMatrix().bits[i * bitmap.getBlackMatrix().rowSize + j]);
-//
-//				}
-//				Log.w("|:",he);
-//			}
-			Log.w("ddd",grayMap.getHeight()+"");
+			whetherCatch=false;
+
+			//now find binarization boolean for hough
 			int lowerBound=200;
 			int higherBound=50;
 			for(int i=0;i<grayMap.getWidth();i++){
@@ -576,12 +555,115 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 						lowerBound=transTemp;
 				}
 			}
+
+			//need to reuse later
+			for(int i=0;i<grayMap.getWidth();i++){
+				String str="";
+				for(int j=0;j<grayMap.getHeight();j++){
+					//can use getPixels to optimaize
+					int temp=grayMap.getPixel(i,j);
+					int transTemp=(temp&0xff);
+					if(transTemp>(lowerBound+higherBound)/2) {
+						str = "_"+str;
+//						grayMap.setPixel(i,j,0);
+						bitsBool[grayMap.getHeight()-1-j][i] = false;
+					}
+					else {
+						str = "*"+str;
+//						grayMap.setPixel(i,j,255);
+						bitsBool[grayMap.getHeight()-1-j][i] = true;
+					}
+				}
+				Log.w("poi",str);
+			}
+			Log.w("before rotate ",""+grayMap.getWidth()+"|"+grayMap.getHeight());
+
+			//now add rotate and find standard
+			ArrayData inputData = getArrayDataFromImage(grayMap);
+			int minContrast =5;// (args.length >= 4) ? 64 : Integer.parseInt(args[4]);
+			ArrayData outputData = houghTransform(inputData, 180, (int)Math.hypot(inputData.width,inputData.height), minContrast,bitsBool);
+
+			//print result
+			int best=0;
+			int bestTheta=0;
+			for(int i=0;i<outputData.width;i++){
+				int tempresult=0;
+				boolean tempStart=false;
+				boolean tempEnd=false;
+				for(int j=0;j<outputData.height;j++){
+					if(!tempStart&&outputData.get(i,j)!=0)
+						tempStart=true;
+					if(tempStart&&!tempEnd&&outputData.get(i,j)==0)
+						tempresult++;
+
+					if(tempStart&&!tempEnd&&outputData.get(i,j)==0&&(j+1)<outputData.height
+							&&outputData.get(i,j+1)==0&&(j+2)<outputData.height&&outputData.get(i,j+2)==0)
+						tempEnd=true;
+					System.out.print(outputData.get(i,j)+"|");
+				}
+				if(tempresult>best) {
+					best = tempresult;
+					bestTheta=i;
+				}
+			System.out.println(i+":"+tempresult);
+//			System.out.println();
+			}
+			System.out.println("best:"+bestTheta+"|"+best);
+			List<Double> doubleList=new ArrayList<>();
+			for(int i=2;i<outputData.height-2;i++){
+				if(outputData.get(bestTheta, i)>outputData.get(bestTheta,i-1)&&outputData.get(bestTheta,i)>outputData.get(bestTheta,i+1)) {
+//				System.out.println(i + ":" + (double) outputData.get(bestTheta, i) / (double) (outputData.get(bestTheta, i - 1) + outputData.get(bestTheta, i)+outputData.get(bestTheta, i + 1)));
+					doubleList.add((double) outputData.get(bestTheta, i) / (double) (outputData.get(bestTheta, i - 1) +outputData.get(bestTheta, i)+ outputData.get(bestTheta, i + 1)));
+
+				}
+				else {
+//				System.out.println(i+":"+0.0);
+				}
+			}
+
+			double[] doubles=new double[6];
+			int[] ints=new int[6];
+			for(int i=0;i<doubleList.size();i++){
+				doubles[i%6]+=doubleList.get(i);
+				ints[i%6]++;
+			}
+
+			int standardIndex=0;
+			double standardRate=0;
+			for(int i=0;i<6;i++){
+				System.out.println(i+":"+doubles[i]/ints[i]);
+				if(doubles[i]/ints[i]>standardRate){
+					standardIndex=i;
+					standardRate=doubles[i]/ints[i];
+				}
+			}
+
+			System.out.println("size:"+doubleList.size());
+			int finalStandard=(doubleList.size()%6+6-standardIndex-1)%6;
+			System.out.println("standard:" + finalStandard);
+
+			Log.w("best theta",bestTheta+"|"+finalStandard);
+			if (true)
+			return "000000000000\n";
+
+
+			Matrix tempTransMatrix = new Matrix();
+			tempTransMatrix.postRotate(bestTheta-90);
+			grayMap= Bitmap.createBitmap(grayMap, 0, 0, grayMap.getWidth(), grayMap.getHeight(), tempTransMatrix, true);
+			Log.w("after rotate ",""+grayMap.getWidth()+"|"+grayMap.getHeight());
+
+			//end of rotate
+
+			Log.w("height and width:",grayMap.getHeight()+"|"+grayMap.getWidth());
+
+			//need to reuse later
             for(int i=0;i<grayMap.getWidth();i++){
                 String str="";
 				for(int j=0;j<grayMap.getHeight();j++){
+					//can use getPixels to optimaize
                     int temp=grayMap.getPixel(i,j);
                     int transTemp=(temp&0xff);
-                    if(transTemp>((lowerBound+higherBound)/2)) {
+                    if(transTemp>(lowerBound+higherBound)/2||(transTemp==0)) {
                         str = "_"+str;
                         bitsBool[grayMap.getHeight()-1-j][i] = false;
                     }
@@ -594,12 +676,7 @@ public class testdecode extends Activity implements OnClickListener, Runnable
                 Log.w("poi",str);
             }
 
-//            return 3;
-        }
-
-        if(whetherCatch){
-            whetherCatch=false;
-            Log.w("i enter this "," what the place and never make it the way out");
+			int linesIndex=0;
 			boolean firstRound=true;
 			double interval=0.0;
             for (int j = 0; j < width; j++) {
@@ -771,11 +848,12 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 					//sort
 					sortPoints(points);
 					Log.w("e","sort !!!!!!!!!!!!!!!!");
+
 					//
 					for(int i=0;i<20;i++){
-						if(points[0][i][0]==0f&&points[0][i][1]==0f){
+						if(points[0][i][0]==0f&&points[0][i][1]==0f&&i>0){
 							interval=(points[0][i-1][1]-points[0][0][1])/(double)(i-1);
-							if(i<7){
+							if(i<7||((linesIndex%6)!=finalStandard)){
 								indexI=0;
 								indexJ=0;
 								firstRound=true;
@@ -783,6 +861,8 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 							break;
 						}
 					}
+
+					linesIndex++;
 //                    if(indexI<19) {
 //
 //                        indexI++;
@@ -998,4 +1078,146 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 			this.xe=xe;
 		}
 	}
+
+	//following is the rotating and finding standard line
+	public static ArrayData houghTransform(ArrayData inputData, int thetaAxisSize, int rAxisSize, int minContrast, boolean[][] bitsBool)
+	{
+		int width = inputData.width;
+		int height = inputData.height;
+		int maxRadius = (int)Math.ceil(Math.hypot(width, height));
+		int halfRAxisSize = rAxisSize >>> 1;
+		ArrayData outputData = new ArrayData(thetaAxisSize, rAxisSize);
+		// x output ranges from 0 to pi
+		// y output ranges from -maxRadius to maxRadius
+		double[] sinTable = new double[thetaAxisSize];
+		double[] cosTable = new double[thetaAxisSize];
+		for (int theta = thetaAxisSize - 1; theta >= 0; theta--)
+		{
+			double thetaRadians = theta * Math.PI / thetaAxisSize;
+			sinTable[theta] = Math.sin(thetaRadians);
+			cosTable[theta] = Math.cos(thetaRadians);
+		}
+
+		for (int y = height - 1; y >= 0; y--)
+		{
+			for (int x = width - 1; x >= 0; x--)
+			{
+//				if (inputData.contrast(x, y, minContrast))
+				if(bitsBool[y][x])
+				{
+					for (int theta = thetaAxisSize - 1; theta >= 0; theta--)
+					{
+						double r = cosTable[theta] * x + sinTable[theta] * y;
+						int rScaled = (int)Math.round(r * halfRAxisSize / maxRadius) + halfRAxisSize;
+						outputData.accumulate(theta, rScaled, 1);
+					}
+				}
+			}
+		}
+		return outputData;
+	}
+
+	public static class ArrayData
+	{
+		public final int[] dataArray;
+		public final int width;
+		public final int height;
+
+		public ArrayData(int width, int height)
+		{
+			this(new int[width * height], width, height);
+		}
+
+		public ArrayData(int[] dataArray, int width, int height)
+		{
+			this.dataArray = dataArray;
+			this.width = width;
+			this.height = height;
+		}
+
+		public int get(int x, int y)
+		{  return dataArray[y * width + x];  }
+
+		public void set(int x, int y, int value)
+		{  dataArray[y * width + x] = value;  }
+
+		public void accumulate(int x, int y, int delta)
+		{  set(x, y, get(x, y) + delta);  }
+
+		public boolean contrast(int x, int y, int minContrast)
+		{
+			int centerValue = get(x, y);
+			for (int i = 8; i >= 0; i--)
+			{
+				if (i == 4)
+					continue;
+				int newx = x + (i % 3) - 1;
+				int newy = y + (i / 3) - 1;
+				if ((newx < 0) || (newx >= width) || (newy < 0) || (newy >= height))
+					continue;
+				if (Math.abs(get(newx, newy) - centerValue) >= minContrast)
+					return true;
+			}
+			return false;
+		}
+
+		public int getMax()
+		{
+			int max = dataArray[0];
+			for (int i = width * height - 1; i > 0; i--)
+				if (dataArray[i] > max)
+					max = dataArray[i];
+			return max;
+		}
+	}
+
+	public static ArrayData getArrayDataFromImage(Bitmap graymap)
+	{
+		int width = graymap.getWidth();
+		int height = graymap.getHeight();
+		ArrayData arrayData = new ArrayData(width, height);
+		// Flip y axis when reading image
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+//				int rgbValue=graymap.getPixel(x,y);
+//				rgbValue = (int)(((rgbValue & 0xFF0000) >>> 16) * 0.30 + ((rgbValue & 0xFF00) >>> 8) * 0.59 + (rgbValue & 0xFF) * 0.11);
+				System.out.print((graymap.getPixel(x,y)  & 0xFF )+"|");
+				arrayData.set(x, height - 1 - y, (graymap.getPixel(x,y) & 0xFF));
+			}
+			System.out.println();
+		}
+		return arrayData;
+	}
+
+	private Bitmap binarization(Bitmap bitmap, int lowColor, int highColor) {
+		int width = bitmap.getWidth();
+		int height = bitmap.getHeight();
+		int pixels[] = new int[width * height];
+		bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+		LuminanceSource source = new RGBLuminanceSource(width, height, pixels);
+		Binarizer binarizer = new HybridBinarizer(source);
+
+		Bitmap result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+		try {
+			BitMatrix matrix = binarizer.getBlackMatrix();
+			for (int i = 0; i < height; i++) {
+				for (int j = 0; j < width; j++) {
+					if (matrix.get(j, i)) {
+						result.setPixel(j, i, highColor);
+					} else {
+						result.setPixel(j, i, lowColor);
+					}
+				}
+			}
+		} catch (NotFoundException e) {
+			e.printStackTrace();
+		}
+
+		return result;
+	}
+
+
 }
