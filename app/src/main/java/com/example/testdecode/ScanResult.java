@@ -3,6 +3,7 @@ package com.example.testdecode;
 
 
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
 import android.os.Bundle;
 
 import android.text.method.ScrollingMovementMethod;
@@ -51,6 +52,19 @@ public class ScanResult extends Activity  implements OnClickListener
 		txtTime=(TextView)findViewById(R.id.txtTime);
 		btnBack=(Button)findViewById(R.id.btnBack);
 		btnBack.setOnClickListener(this);
+
+
+		//monospace display
+		txtR.setTextScaleX(1.5f);
+
+		txtR.setTextSize(20);
+
+		txtR.setTypeface(Typeface.MONOSPACE);
+		txtR2.setTextScaleX(1.5f);
+
+		txtR2.setTextSize(20);
+
+		txtR2.setTypeface(Typeface.MONOSPACE);
 /*		btnCopy=(Button)findViewById(R.id.btnCopy);
 		btnCopy.setOnClickListener(this);
 		btnWebcheck=(Button)findViewById(R.id.btnWebcheck);

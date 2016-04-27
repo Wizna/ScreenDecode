@@ -479,7 +479,7 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 
 
 //			if(retNumber!=0&&retNumber!=-1)
-				if(retString.length()>2&&retString.contains("0")&&retString.contains("\n"))
+				if(retString.length()>5&&retString.contains("\n"))
 
 				{
 				//now we get the net string and play the multimeida data, so we need not show the decode result activity
@@ -535,35 +535,425 @@ public class testdecode extends Activity implements OnClickListener, Runnable
         boolean alreadyOne=false;
         boolean lineChange=false;
 
+
+
 		//now add find direction and chose edge line
 		ArrayList<Point> pointArrayList=new ArrayList<>();
 
         if(whetherCatch) {
 			whetherCatch=false;
 
+			//try zxing binarization
+			BitMatrix binaryMatrix=bitmap.getBlackMatrix();
+
+			for(int i=0;i<binaryMatrix.width;i++){
+				String str="";
+				for(int j=0;j<binaryMatrix.height;j++){
+					if(!binaryMatrix.get(i,j)) {
+//						str = grayMap.getPixel(i,j)+"|"+str;
+						grayMap.setPixel(i,j,0xff000000);
+						bitsBool[grayMap.getHeight()-1-j][i] = false;
+					}
+					else {
+//						str = grayMap.getPixel(i,j)+"|"+str;
+						grayMap.setPixel(i,j,0xffffffff);
+						bitsBool[grayMap.getHeight()-1-j][i] = true;
+					}
+//					System.out.print(binaryMatrix.get(i,j));
+				}
+//				Log.w("poi",str);
+
+//				System.out.println();
+			}
+
+//			if (true)
+//				return "000000000\n";
+
 			//now find binarization boolean for hough
 			int lowerBound=200;
 			int higherBound=50;
-			for(int i=0;i<grayMap.getWidth();i++){
-				for(int j=0;j<grayMap.getHeight();j++){
-					int temp=grayMap.getPixel(i,j);
-					int transTemp=(temp&0xff);
-					if(transTemp>higherBound)
-						higherBound=transTemp;
+//			for(int i=0;i<grayMap.getWidth();i++){
+//				for(int j=0;j<grayMap.getHeight();j++){
+//					int temp=grayMap.getPixel(i,j);
+//					int transTemp=(temp&0xff);
+//					if(transTemp>higherBound)
+//						higherBound=transTemp;
+//
+//					if(transTemp<lowerBound)
+//						lowerBound=transTemp;
+//				}
+//			}
+//
+//			//need to reuse later
+//			for(int i=0;i<grayMap.getWidth();i++){
+//				String str="";
+//				for(int j=0;j<grayMap.getHeight();j++){
+//					//can use getPixels to optimaize
+//					int temp=grayMap.getPixel(i,j);
+//					int transTemp=(temp&0xff);
+//					if(transTemp>(lowerBound+higherBound)/2) {
+//						str = "_"+str;
+////						grayMap.setPixel(i,j,0);
+//						bitsBool[grayMap.getHeight()-1-j][i] = false;
+//					}
+//					else {
+//						str = "*"+str;
+////						grayMap.setPixel(i,j,255);
+//						bitsBool[grayMap.getHeight()-1-j][i] = true;
+//					}
+//				}
+//				Log.w("poi",str);
+//			}
+			Log.w("before rotate ",""+grayMap.getWidth()+"|"+grayMap.getHeight());
 
-					if(transTemp<lowerBound)
-						lowerBound=transTemp;
+
+			//now add rotate and find standard
+//			ArrayData inputData = getArrayDataFromImage(grayMap);
+//			int minContrast =5;// (args.length >= 4) ? 64 : Integer.parseInt(args[4]);
+//			ArrayData outputData = houghTransform(inputData, 180, (int)Math.hypot(inputData.width,inputData.height), minContrast,bitsBool);
+//
+//			//print result
+//			int best=0;
+//			for(int i=0;i<outputData.width;i++){
+//				int tempresult=0;
+//				boolean tempStart=false;
+//				boolean tempEnd=false;
+//				for(int j=0;j<outputData.height;j++){
+//					if(!tempStart&&outputData.get(i,j)!=0)
+//						tempStart=true;
+//					if(tempStart&&!tempEnd&&outputData.get(i,j)==0)
+//						tempresult++;
+//
+//					if(tempStart&&!tempEnd&&outputData.get(i,j)==0&&(j+1)<outputData.height
+//							&&outputData.get(i,j+1)==0&&(j+2)<outputData.height&&outputData.get(i,j+2)==0)
+//						tempEnd=true;
+//					System.out.print(outputData.get(i,j)+"|");
+//				}
+//				if(tempresult>best) {
+//					best = tempresult;
+//					bestTheta=i;
+//				}
+//			System.out.println(i+":"+tempresult);
+////			System.out.println();
+//			}
+//			System.out.println("best:"+bestTheta+"|"+best);
+//			List<Double> doubleList=new ArrayList<>();
+//			for(int i=2;i<outputData.height-2;i++){
+//				if(outputData.get(bestTheta, i)>outputData.get(bestTheta,i-1)&&outputData.get(bestTheta,i)>outputData.get(bestTheta,i+1)) {
+////				System.out.println(i + ":" + (double) outputData.get(bestTheta, i) / (double) (outputData.get(bestTheta, i - 1) + outputData.get(bestTheta, i)+outputData.get(bestTheta, i + 1)));
+//					doubleList.add((double) outputData.get(bestTheta, i) / (double) (outputData.get(bestTheta, i - 1) +outputData.get(bestTheta, i)+ outputData.get(bestTheta, i + 1)));
+//
+//				}
+//				else {
+////				System.out.println(i+":"+0.0);
+//				}
+//			}
+//
+//			double[] doubles=new double[6];
+//			int[] ints=new int[6];
+//			for(int i=0;i<doubleList.size();i++){
+//				doubles[i%6]+=doubleList.get(i);
+//				ints[i%6]++;
+//			}
+//
+//			int standardIndex=0;
+//			double standardRate=0;
+//			for(int i=0;i<6;i++){
+//				System.out.println(i+":"+doubles[i]/ints[i]);
+//				if(doubles[i]/ints[i]>standardRate){
+//					standardIndex=i;
+//					standardRate=doubles[i]/ints[i];
+//				}
+//			}
+//
+//			System.out.println("size:"+doubleList.size());
+//			int finalStandard=(doubleList.size()%6+6-standardIndex-1)%6;
+//			System.out.println("standard:" + finalStandard);
+//
+//			Log.w("best theta",bestTheta+"|"+finalStandard);
+
+
+
+//			Matrix tempTransMatrix = new Matrix();
+//			tempTransMatrix.postRotate(bestTheta-90);
+//			grayMap= Bitmap.createBitmap(grayMap, 0, 0, grayMap.getWidth(), grayMap.getHeight(), tempTransMatrix, true);
+//			Log.w("after rotate ",""+grayMap.getWidth()+"|"+grayMap.getHeight());
+//
+//			//end of rotate
+//
+//			Log.w("height and width:",grayMap.getHeight()+"|"+grayMap.getWidth());
+//
+//			//need to reuse later
+//            for(int i=0;i<grayMap.getWidth();i++){
+//                String str="";
+//				for(int j=0;j<grayMap.getHeight();j++){
+//					//can use getPixels to optimaize
+//                    int temp=grayMap.getPixel(i,j);
+//                    int transTemp=(temp&0xff);
+//                    if(transTemp>(lowerBound+higherBound)/2||(transTemp==0)) {
+//                        str = "_"+str;
+//                        bitsBool[grayMap.getHeight()-1-j][i] = false;
+//                    }
+//                    else {
+//                        str = "*"+str;
+//                        bitsBool[grayMap.getHeight()-1-j][i] = true;
+//
+//                    }
+//                }
+//                Log.w("poi",str);
+//            }
+
+			//another way to find theta, with finding nearest points and extend
+			for (int j = 0; j < width; j++) {
+				for (int i = 0; i < height; i++) {
+//                    Log.w("d","dddddd");
+					if(whetherChecked[i][j]){
+						lineChange=true;
+						alreadyOne=true;
+					}else
+					if(bitsBool[i][j]){
+//                        whetherChecked[i][j]=true;
+
+						int originX=j;
+						int originY=i;
+
+						int changeX=j;
+						int changeY=i;
+
+						int lastMove=1;
+
+						int xs=j,xe=j,ys=i,ye=i;
+
+						while(true){
+//                            Log.w("pos:",""+changeX+"|"+changeY+"|"+originX+"|"+originY+"|"+lastMove);
+//                            int thisMove=(lastMove+7)/4;
+							if(lastMove==0){
+								if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
+									changeY--;
+									lastMove = 3;
+								}else if((changeX+1<width)&&!whetherChecked[changeY][changeX+1]&&bitsBool[changeY][changeX+1]){
+									changeX++;
+									lastMove = 0;
+								}else if((changeY+1<height)&&!whetherChecked[changeY+1][changeX]&&bitsBool[changeY+1][changeX]){
+									changeY++;
+									lastMove = 1;
+								}else if((changeX-1>-1)&&!whetherChecked[changeY][changeX-1]&&bitsBool[changeY][changeX-1]){
+									changeX--;
+									lastMove = 2;
+								}
+							}else if(lastMove==1){
+								if((changeX+1<width)&&!whetherChecked[changeY][changeX+1]&&bitsBool[changeY][changeX+1]){
+									changeX++;
+									lastMove = 0;
+								}else if((changeY+1<height)&&!whetherChecked[changeY+1][changeX]&&bitsBool[changeY+1][changeX]){
+									changeY++;
+									lastMove = 1;
+								}else if((changeX-1>-1)&&!whetherChecked[changeY][changeX-1]&&bitsBool[changeY][changeX-1]){
+									changeX--;
+									lastMove = 2;
+								}else if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
+									changeY--;
+									lastMove = 3;
+								}
+							}else if(lastMove==2){
+								if((changeY+1<height)&&!whetherChecked[changeY+1][changeX]&&bitsBool[changeY+1][changeX]){
+									changeY++;
+									lastMove = 1;
+								}else if((changeX-1>-1)&&!whetherChecked[changeY][changeX-1]&&bitsBool[changeY][changeX-1]){
+									changeX--;
+									lastMove = 2;
+								}else if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
+									changeY--;
+									lastMove = 3;
+								}else if((changeX+1<width)&&!whetherChecked[changeY][changeX+1]&&bitsBool[changeY][changeX+1]){
+									changeX++;
+									lastMove = 0;
+								}
+							}else if(lastMove==3){
+								if((changeX-1>-1)&&!whetherChecked[changeY][changeX-1]&&bitsBool[changeY][changeX-1]){
+									changeX--;
+									lastMove = 2;
+								}else if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
+									changeY--;
+									lastMove = 3;
+								}else if((changeX+1<width)&&!whetherChecked[changeY][changeX+1]&&bitsBool[changeY][changeX+1]){
+									changeX++;
+									lastMove = 0;
+								}else if((changeY+1<height)&&!whetherChecked[changeY+1][changeX]&&bitsBool[changeY+1][changeX]){
+									changeY++;
+									lastMove = 1;
+								}
+							}
+
+							if(changeX>xe)
+								xe=changeX;
+
+							if(changeX<xs)
+								xs=changeX;
+
+							if(changeY>ye)
+								ye=changeY;
+
+							if(changeY<ys)
+								ys=changeY;
+
+							if(changeX==originX&&changeY==originY)
+								break;
+						}
+
+
+
+//						Log.w("loc","here|"+xs+"|"+xe+"|"+ys+"|"+ye);
+						for(int setI=ys;setI<=ye;setI++){
+							for(int setJ=xs;setJ<=xe;setJ++){
+								whetherChecked[setI][setJ] = true;
+							}
+						}
+
+//						System.out.println("loc1");
+						float centX = (xs+xe)/2;
+						float centY = (ys+ye)/2;
+
+						pointArrayList.add(new Point(centX,centY));
+//						System.out.println("loc2");
+
+					}
 				}
+
 			}
 
-			//need to reuse later
+			//the new way of finding theta
+			int[] countTheta=new int[18];
+			double foundTheta=0;
+			boolean whetherFound = false;
+			int countSelectingPoint=0;
+			while (!whetherFound&&countSelectingPoint<pointArrayList.size()) {
+
+				Point midPoint = pointArrayList.get(countSelectingPoint);
+				countSelectingPoint++;
+
+				for (int i = 0; i < pointArrayList.size(); i++) {
+					pointArrayList.get(i).setDistanceTo(midPoint);
+				}
+				Collections.sort(pointArrayList);
+
+				double[][] fourPoints = new double[4][2];
+				double addDistance = 0;
+				double addCrossDis = 0;
+				for (int i = 1; i < 5; i++) {
+					fourPoints[i - 1][0] = pointArrayList.get(i).getCentX();
+					fourPoints[i - 1][1] = pointArrayList.get(i).getCentY();
+//                    System.out.println("dis:" + pointArrayList.get(i).distance);
+					addDistance += pointArrayList.get(i).distance;
+				}
+
+				int m=0, n=0;
+				for(int i=0;i<6;i++){
+					switch (i){
+						case 0:m=0;n=1;break;
+						case 1:m=0;n=2;break;
+						case 2:m=0;n=3;break;
+						case 3:m=1;n=2;break;
+						case 4:m=1;n=3;break;
+						case 5:m=2;n=3;break;
+					}
+
+					double disPair = pointArrayList.get(m+1).distance + pointArrayList.get(n + 1).distance;
+					double ratePair = (pointArrayList.get(m+1).distance / pointArrayList.get(n + 1).distance);
+					Point[] possiblePoints = new Point[2];
+					if (1.053 > ratePair && ratePair > 0.95 && Math.hypot((fourPoints[m][1] - fourPoints[n][1]), (fourPoints[m][0] - fourPoints[n][0])) / disPair > 0.95) {
+						possiblePoints[0] = new Point((2 * pointArrayList.get(m+1).centX - midPoint.centX), (2 * pointArrayList.get(m+1).centY - midPoint.centY));
+						possiblePoints[1] = new Point((2 * pointArrayList.get(n+1).centX - midPoint.centX), (2 * pointArrayList.get(n+1).centY - midPoint.centY));
+
+						int findResult = findLinePoint(possiblePoints, pointArrayList);
+						if (findResult != -1){
+							whetherFound = true;
+
+							foundTheta=Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) / Math.PI * 180;
+							System.out.println(Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) / Math.PI * 180);
+							break;
+						}
+					}
+				}
+//				for (int i = 0; i < 3; i++) {
+//					if (i == 0) {
+//						m = 1;
+//						n = 2;
+//					} else if (i == 1) {
+//						m = 0;
+//						n = 2;
+//					} else {
+//						m = 0;
+//						n = 1;
+//					}
+//					if (linesIntersect(fourPoints[i][0], fourPoints[i][1], fourPoints[3][0], fourPoints[3][1],
+//							fourPoints[m][0], fourPoints[m][1], fourPoints[n][0], fourPoints[n][1])) {
+//						double disPair = pointArrayList.get(4).distance + pointArrayList.get(i + 1).distance;
+//						double ratePair = (pointArrayList.get(4).distance / pointArrayList.get(i + 1).distance);
+//						Point[] possiblePoints = new Point[4];
+//						if (1.053 > ratePair && ratePair > 0.95 && Math.hypot((fourPoints[3][1] - fourPoints[i][1]), (fourPoints[3][0] - fourPoints[i][0])) / disPair > 0.95) {
+//							possiblePoints[0] = new Point((2 * pointArrayList.get(4).centX - midPoint.centX), (2 * pointArrayList.get(4).centY - midPoint.centY));
+//							possiblePoints[1] = new Point((2 * pointArrayList.get(i + 1).centX - midPoint.centX), (2 * pointArrayList.get(i + 1).centY - midPoint.centY));
+//
+//
+//						} else {
+//
+//							disPair = pointArrayList.get(m + 1).distance + pointArrayList.get(n + 1).distance;
+//							ratePair = (pointArrayList.get(m + 1).distance / pointArrayList.get(n + 1).distance);
+//							if (1.053 > ratePair && ratePair > 0.95 && Math.hypot((fourPoints[m][1] - fourPoints[n][1]), (fourPoints[m][0] - fourPoints[n][0])) / disPair > 0.95) {
+//								possiblePoints[2] = new Point((2 * pointArrayList.get(m + 1).centX - midPoint.centX), (2 * pointArrayList.get(m + 1).centY - midPoint.centY));
+//								possiblePoints[3] = new Point((2 * pointArrayList.get(n + 1).centX - midPoint.centX), (2 * pointArrayList.get(n + 1).centY - midPoint.centY));
+//
+//							}
+//						}
+//
+//						int findResult = findLinePoint(possiblePoints, pointArrayList);
+//						if (findResult != -1){
+//							whetherFound = true;
+////                            System.out.println("find:" + findResult);
+//
+//
+//							if (findResult < 2) {
+//								foundTheta=Math.atan((fourPoints[3][1] - fourPoints[i][1]) / (fourPoints[3][0] - fourPoints[i][0])) / Math.PI * 180;
+//								System.out.println(Math.atan((fourPoints[3][1] - fourPoints[i][1]) / (fourPoints[3][0] - fourPoints[i][0])) / Math.PI * 180);
+//								countTheta[Math.atan((fourPoints[3][1] - fourPoints[i][1]) / (fourPoints[3][0] - fourPoints[i][0])) < 0 ? (int) (Math.atan((fourPoints[3][1] - fourPoints[i][1]) / (fourPoints[3][0] - fourPoints[i][0])) / Math.PI * 18 + 18) : (int) (Math.atan((fourPoints[3][1] - fourPoints[i][1]) / (fourPoints[3][0] - fourPoints[i][0])) / Math.PI * 18)]++;
+////                                System.out.println(points[3][1] + "|" + points[3][0] + "|" + points[i][1] + "|" + points[i][0] + "|" + midPoint.centY + "|" + midPoint.centX);
+//							} else {
+//								foundTheta=Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) / Math.PI * 180;
+//								System.out.println(Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) / Math.PI * 180);
+////                                System.out.println(points[m][1] + "|" + points[m][0] + "|" + points[n][1] + "|" + points[n][0] + "|" + midPoint.centY + "|" + midPoint.centX);
+//								countTheta[Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) < 0 ? (int) (Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) / Math.PI * 18 + 18) : (int) (Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) / Math.PI * 18)]++;
+//
+//							}
+//							break;
+//						}
+//					}
+//				}
+			}
+
+			if(!whetherFound)
+				return "-100000000000\n"+countSelectingPoint;
+
+
+
+			//now trans binarization result in BinaryBitmap to bitmap
+
+			//rotate
+			Matrix tempTransMatrix = new Matrix();
+			tempTransMatrix.postRotate((float)(foundTheta-90));
+			grayMap= Bitmap.createBitmap(grayMap, 0, 0, grayMap.getWidth(), grayMap.getHeight(), tempTransMatrix, true);
+			Log.w("after rotate",""+grayMap.getWidth()+"|"+grayMap.getHeight());
+			//end of rotate
+
+			//now start finding points after rotate
+			//how new bitmap get into old width and height?
 			for(int i=0;i<grayMap.getWidth();i++){
 				String str="";
 				for(int j=0;j<grayMap.getHeight();j++){
 					//can use getPixels to optimaize
 					int temp=grayMap.getPixel(i,j);
 					int transTemp=(temp&0xff);
-					if(transTemp>(lowerBound+higherBound)/2) {
+					if(transTemp==0) {
 						str = "_"+str;
 //						grayMap.setPixel(i,j,0);
 						bitsBool[grayMap.getHeight()-1-j][i] = false;
@@ -576,107 +966,13 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 				}
 				Log.w("poi",str);
 			}
-			Log.w("before rotate ",""+grayMap.getWidth()+"|"+grayMap.getHeight());
 
-			//now add rotate and find standard
-			ArrayData inputData = getArrayDataFromImage(grayMap);
-			int minContrast =5;// (args.length >= 4) ? 64 : Integer.parseInt(args[4]);
-			ArrayData outputData = houghTransform(inputData, 180, (int)Math.hypot(inputData.width,inputData.height), minContrast,bitsBool);
+//			if(true)
+//				return "000000000000\n";
 
-			//print result
-			int best=0;
-			int bestTheta=0;
-			for(int i=0;i<outputData.width;i++){
-				int tempresult=0;
-				boolean tempStart=false;
-				boolean tempEnd=false;
-				for(int j=0;j<outputData.height;j++){
-					if(!tempStart&&outputData.get(i,j)!=0)
-						tempStart=true;
-					if(tempStart&&!tempEnd&&outputData.get(i,j)==0)
-						tempresult++;
+			whetherChecked=new boolean[height][width];
 
-					if(tempStart&&!tempEnd&&outputData.get(i,j)==0&&(j+1)<outputData.height
-							&&outputData.get(i,j+1)==0&&(j+2)<outputData.height&&outputData.get(i,j+2)==0)
-						tempEnd=true;
-					System.out.print(outputData.get(i,j)+"|");
-				}
-				if(tempresult>best) {
-					best = tempresult;
-					bestTheta=i;
-				}
-			System.out.println(i+":"+tempresult);
-//			System.out.println();
-			}
-			System.out.println("best:"+bestTheta+"|"+best);
-			List<Double> doubleList=new ArrayList<>();
-			for(int i=2;i<outputData.height-2;i++){
-				if(outputData.get(bestTheta, i)>outputData.get(bestTheta,i-1)&&outputData.get(bestTheta,i)>outputData.get(bestTheta,i+1)) {
-//				System.out.println(i + ":" + (double) outputData.get(bestTheta, i) / (double) (outputData.get(bestTheta, i - 1) + outputData.get(bestTheta, i)+outputData.get(bestTheta, i + 1)));
-					doubleList.add((double) outputData.get(bestTheta, i) / (double) (outputData.get(bestTheta, i - 1) +outputData.get(bestTheta, i)+ outputData.get(bestTheta, i + 1)));
-
-				}
-				else {
-//				System.out.println(i+":"+0.0);
-				}
-			}
-
-			double[] doubles=new double[6];
-			int[] ints=new int[6];
-			for(int i=0;i<doubleList.size();i++){
-				doubles[i%6]+=doubleList.get(i);
-				ints[i%6]++;
-			}
-
-			int standardIndex=0;
-			double standardRate=0;
-			for(int i=0;i<6;i++){
-				System.out.println(i+":"+doubles[i]/ints[i]);
-				if(doubles[i]/ints[i]>standardRate){
-					standardIndex=i;
-					standardRate=doubles[i]/ints[i];
-				}
-			}
-
-			System.out.println("size:"+doubleList.size());
-			int finalStandard=(doubleList.size()%6+6-standardIndex-1)%6;
-			System.out.println("standard:" + finalStandard);
-
-			Log.w("best theta",bestTheta+"|"+finalStandard);
-			if (true)
-			return "000000000000\n";
-
-
-			Matrix tempTransMatrix = new Matrix();
-			tempTransMatrix.postRotate(bestTheta-90);
-			grayMap= Bitmap.createBitmap(grayMap, 0, 0, grayMap.getWidth(), grayMap.getHeight(), tempTransMatrix, true);
-			Log.w("after rotate ",""+grayMap.getWidth()+"|"+grayMap.getHeight());
-
-			//end of rotate
-
-			Log.w("height and width:",grayMap.getHeight()+"|"+grayMap.getWidth());
-
-			//need to reuse later
-            for(int i=0;i<grayMap.getWidth();i++){
-                String str="";
-				for(int j=0;j<grayMap.getHeight();j++){
-					//can use getPixels to optimaize
-                    int temp=grayMap.getPixel(i,j);
-                    int transTemp=(temp&0xff);
-                    if(transTemp>(lowerBound+higherBound)/2||(transTemp==0)) {
-                        str = "_"+str;
-                        bitsBool[grayMap.getHeight()-1-j][i] = false;
-                    }
-                    else {
-                        str = "*"+str;
-                        bitsBool[grayMap.getHeight()-1-j][i] = true;
-
-                    }
-                }
-                Log.w("poi",str);
-            }
-
-			int linesIndex=0;
+//			int linesIndex=0;
 			boolean firstRound=true;
 			double interval=0.0;
             for (int j = 0; j < width; j++) {
@@ -788,7 +1084,9 @@ public class testdecode extends Activity implements OnClickListener, Runnable
                         float centX = (xs+xe)/2;
 						float centY = (ys+ye)/2;
 
-						pointArrayList.add(new Point(centX,centY));
+						//remove spots
+						if(Math.abs(xe-xs)>=2&&Math.abs(ye-ys)>=2)
+							pointArrayList.add(new Point(centX,centY));
 
 						if(firstRound) {
 							points[indexI][indexJ][0] = centX;
@@ -853,21 +1151,34 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 					for(int i=0;i<20;i++){
 						if(points[0][i][0]==0f&&points[0][i][1]==0f&&i>0){
 							interval=(points[0][i-1][1]-points[0][0][1])/(double)(i-1);
-							if(i<7||((linesIndex%6)!=finalStandard)){
+							if(i<7){
 								indexI=0;
 								indexJ=0;
 								firstRound=true;
+								points=new float[20][20][2];
+								break;
+							}
+							for(int k=1;k<i-1;k++){
+								if(Math.abs(2*points[0][k][1]-points[0][k-1][1]-points[0][k+1][1])>3||Math.hypot(Math.abs(points[0][k+1][1]-points[0][k-1][1]),Math.abs(points[0][k+1][0]-points[0][k-1][0]))/(Math.hypot(Math.abs(points[0][k+1][1]-points[0][k][1]),Math.abs(points[0][k+1][0]-points[0][k][0]))+Math.hypot(Math.abs(points[0][k][1]-points[0][k-1][1]),Math.abs(points[0][k][0]-points[0][k-1][0])))<0.95){
+									indexI=0;
+									indexJ=0;
+									firstRound=true;
+									System.out.println("shrehold:"+Math.abs(2*points[0][k][1]-points[0][k-1][1]-points[0][k+1][1])+"|-|"+Math.hypot(Math.abs(points[0][k+1][1]-points[0][k-1][1]),Math.abs(points[0][k+1][0]-points[0][k-1][0]))/(Math.hypot(Math.abs(points[0][k+1][1]-points[0][k][1]),Math.abs(points[0][k+1][0]-points[0][k][0]))+Math.hypot(Math.abs(points[0][k][1]-points[0][k-1][1]),Math.abs(points[0][k][0]-points[0][k-1][0]))));
+									points=new float[20][20][2];
+									break;
+								}
 							}
 							break;
 						}
 					}
 
-					linesIndex++;
-//                    if(indexI<19) {
-//
-//                        indexI++;
-//                        indexJ=0;
-//                    }
+//					linesIndex++;
+                    if(indexI<19&&!firstRound) {
+
+                        indexI++;
+                        indexJ=0;
+                    }
+
                     alreadyOne=false;
                 }
 
@@ -875,33 +1186,11 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 
             }
 
+
+
+//			if (true)
+//				return "000000000000\n";
 			sortPoints(points);
-			//find 6 points from list
-//			Point[] chosePoints=new Point[7];
-//			chosePoints[3]=pointArrayList.remove(pointArrayList.size()/2);
-//			for(int i=0;i<3;i++){
-//				for(int j=0;j<pointArrayList.size();j++){
-//					pointArrayList.get(j).setDistanceTo(chosePoints[3+i]);
-//				}
-//
-//				Collections.sort(pointArrayList);
-//
-//				Point[] tempNSEW=new Point[4];
-//				for(int j=0;j<4;j++){
-//					if(pointArrayList.get(j).centY>chosePoints[3+i].centY&&pointArrayList.get(j).centX>chosePoints[3+i].centX) {
-//						tempNSEW[0] = pointArrayList.get(j);
-//					}
-//					else if(pointArrayList.get(j).centY>chosePoints[3+i].centY&&pointArrayList.get(j).centX<chosePoints[3+i].centX) {
-//						tempNSEW[1] = pointArrayList.get(j);
-//					}
-//					else if(pointArrayList.get(j).centY<chosePoints[3+i].centY&&pointArrayList.get(j).centX<chosePoints[3+i].centX) {
-//						tempNSEW[2] = pointArrayList.get(j);
-//					}
-//					else {
-//						tempNSEW[3] = pointArrayList.get(j);
-//					}
-//				}
-//			}
 
 
             for(int i=0;i<20;i++){
@@ -934,16 +1223,16 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 //			for(int i=0;i<6;i++){
 //				columnInternal[i] = points[0][0][0]+i*internalX;
 //			}
-
+			Log.w("interval:",(interval/14.8)+"");
 			String charResult = "";
 			String retString="";
-			Log.w("interval:",(interval/15)+"");
-			for(int i=0;i<20;i++){
+			for(int i=0;i<10;i++){
 //				internalX = (points[i][6][1]-points[i][0][1])/6;
-				for(int j=0;j<20;j++){
-					if(points[i][j][0]!=0||points[i][j][1]!=0){
+				for(int j=0;j<10;j++){
+//					if(points[i][j][0]!=0||points[i][j][1]!=0){
 //						Log.w("2",""+internalY);
 //						internalY = (points[6][j][0]-points[0][j][0])/6;
+
 						int x=0;
 						int y=0;
 //						if(points[i][j][0]<(points[0][j][0]+i*internalY)-4){
@@ -960,63 +1249,107 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 						float expectX=(points[6][j][0]-points[0][j][0])*i/6+points[0][j][0];
 						float expectY=(points[6][j][1]-points[0][j][1])*i/6+points[0][j][1];
 						charResult=charResult+"("+formatString(expectX+"",5).substring(0,5)+";"+formatString(expectY+"",5).substring(0,5)+")";
-						double shreshhold=interval/15;//16.77 is from experience
+						if(points[i][j][0]==0&&points[i][j][1]==0){
+							charResult+="*";
+							retString+="*";
+							continue;
+						}
+
+						double shreshhold=interval/14.8;//14.8 is from experience
 						if(points[i][j][0]>expectX+3*shreshhold){
 							x=1;
 						}else if(points[i][j][0]>expectX+shreshhold){
 							x=-1;
-						}else if(points[i][j][0]<expectX-shreshhold){
+						}else if(points[i][j][0]<expectX-3*shreshhold){
 							x=-2;
+						}else if(points[i][j][0]<expectX-shreshhold){
+							x=2;
 						}
 
 						if(points[i][j][1]<expectY-3*shreshhold){
 							y=1;
 						}else if(points[i][j][1]<expectY-shreshhold){
 							y=-1;
-						}else if(points[i][j][1]>expectY+shreshhold){
+						}else if(points[i][j][1]>expectY+3*shreshhold){
 							y=-2;
+						}else if(points[i][j][1]>expectY+shreshhold){
+							y=2;
 						}
 
-						if(x==0||y==0){
-							charResult+="0";
-							retString+="0";
+						if(x==0){
+							if(y==1){
+								charResult+="R";
+								retString+="R";
+							}else if(y==-1){
+								charResult+="S";
+								retString+="S";
+							}else if(y==-2){
+								charResult+="T";
+								retString+="T";
+							}else {
+								charResult += "A";
+								retString+="A";
+							}
 						}else if(x==1){
 							if(y==1){
-								charResult+="7";
-								retString+="7";
+								charResult+="B";
+								retString+="B";
 							}else if(y==-1){
-								charResult+="8";
-								retString+="8";
+								charResult+="C";
+								retString+="C";
+							}else if(y==-2){
+								charResult+="D";
+								retString+="D";
 							}else {
-								charResult += "9";
-								retString+="9";
+								charResult += "E";
+								retString+="E";
 							}
 						}else if(x==-1){
 							if(y==1){
-								charResult+="4";
-								retString+="4";
+								charResult+="F";
+								retString+="F";
 							}else if(y==-1){
-								charResult+="5";
-								retString+="5";
+								charResult+="G";
+								retString+="G";
+							}else if(y==-2){
+								charResult+="H";
+								retString+="H";
 							}else {
-								charResult += "6";
-								retString+="6";
+								charResult += "I";
+								retString+="I";
+							}
+						}else if(x==-2){
+							if(y==1){
+								charResult+="J";
+								retString+="J";
+							}else if(y==-1){
+								charResult+="K";
+								retString+="K";
+							}else if(y==-2){
+								charResult+="L";
+								retString+="L";
+							}else {
+								charResult += "M";
+								retString+="M";
 							}
 						}else{
 							if(y==1){
-								charResult+="1";
-								retString+="1";
+								charResult+="N";
+								retString+="N";
 							}else if(y==-1){
-								charResult+="2";
-								retString+="2";
+								charResult+="O";
+								retString+="O";
+							}else if(y==-2){
+								charResult+="P";
+								retString+="P";
 							}else {
-								charResult += "3";
-								retString+="3";
+								charResult += "Q";
+								retString+="Q";
 							}
 						}
 
 //						Log.w("",x+"|"+y);
-					}
+//					}
 				}
 //				retString=formatString(retString,i*12+10);
 				retString+="\n";
@@ -1219,5 +1552,75 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 		return result;
 	}
 
+	public static int findLinePoint(Point[] possiblePoints, ArrayList<Point> pointsList){
+		if(possiblePoints[0]!=null){
+			for(int j=0;j<pointsList.size();j++){
+				pointsList.get(j).setDistanceTo(possiblePoints[0]);
+			}
+			Collections.sort(pointsList);
+			System.out.println("nearest1:"+pointsList.get(0).distance);
+			if(pointsList.get(0).distance<2) {
+				for(int j=0;j<pointsList.size();j++){
+					pointsList.get(j).setDistanceTo(possiblePoints[1]);
+				}
+				Collections.sort(pointsList);
+				System.out.println("nearest2:" + pointsList.get(0).distance);
+				if(pointsList.get(0).distance<2)
+					return 0;
+			}
+		}
+//		for(int i=0;i<2;i++){
+//			if(possiblePoints[2*i]!=null){
+//				for(int j=0;j<pointsList.size();j++){
+//					pointsList.get(j).setDistanceTo(possiblePoints[2*i]);
+//				}
+//				Collections.sort(pointsList);
+//				System.out.println("nearest1:"+pointsList.get(0).distance);
+//				if(pointsList.get(0).distance<2) {
+//					for(int j=0;j<pointsList.size();j++){
+//						pointsList.get(j).setDistanceTo(possiblePoints[2*i+1]);
+//					}
+//					Collections.sort(pointsList);
+//					System.out.println("nearest2:" + pointsList.get(0).distance);
+//					if(pointsList.get(0).distance<2)
+//						return 2*i;
+//				}
+//			}
+//		}
+		return -1;
+	}
 
+	public static boolean linesIntersect(double x1, double y1, double x2, double y2, double x3,
+										 double y3, double x4, double y4) {
+        /*
+         * A = (x2-x1, y2-y1) B = (x3-x1, y3-y1) C = (x4-x1, y4-y1) D = (x4-x3,
+         * y4-y3) = C-B E = (x1-x3, y1-y3) = -B F = (x2-x3, y2-y3) = A-B Result
+         * is ((AxB) (AxC) <=0) and ((DxE) (DxF) <= 0) DxE = (C-B)x(-B) =
+         * BxB-CxB = BxC DxF = (C-B)x(A-B) = CxA-CxB-BxA+BxB = AxB+BxC-AxC
+         */
+		x2 -= x1; // A
+		y2 -= y1;
+		x3 -= x1; // B
+		y3 -= y1;
+		x4 -= x1; // C
+		y4 -= y1;
+		double AvB = x2 * y3 - x3 * y2;
+		double AvC = x2 * y4 - x4 * y2;
+		// Online
+		if (AvB == 0.0 && AvC == 0.0) {
+			if (x2 != 0.0) {
+				return (x4 * x3 <= 0.0)
+						|| ((x3 * x2 >= 0.0) && (x2 > 0.0 ? x3 <= x2 || x4 <= x2 : x3 >= x2
+						|| x4 >= x2));
+			}
+			if (y2 != 0.0) {
+				return (y4 * y3 <= 0.0)
+						|| ((y3 * y2 >= 0.0) && (y2 > 0.0 ? y3 <= y2 || y4 <= y2 : y3 >= y2
+						|| y4 >= y2));
+			}
+			return false;
+		}
+		double BvC = x3 * y4 - x4 * y3;
+		return (AvB * AvC <= 0.0) && (BvC * (AvB + BvC - AvC) <= 0.0);
+	}
 }
