@@ -1,39 +1,28 @@
 package com.example.testdecode;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.sql.Date;
 import java.lang.Thread;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.ImageFormat;
 import com.google.zxing.Android.PlanarYUVLuminanceSource;
-import com.google.zxing.Android.RGBLuminanceSource;
-import com.google.zxing.Binarizer;
 import com.google.zxing.BinaryBitmap;
-import com.google.zxing.LuminanceSource;
 import com.google.zxing.NotFoundException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.common.PerspectiveTransform;
-
-import foster.src.other.ProgressView;
-//import com.example.testdecode.Decoding;
-//import foster.scan.SCDecode;
 
 import android.app.Activity;
 import android.app.Service;
 import android.content.Intent;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
 import android.graphics.Matrix;
 import android.hardware.Camera;
 
 import android.media.AudioManager;
-import android.media.ImageReader;
 import android.os.Bundle;
 
 import android.util.DisplayMetrics;
@@ -45,7 +34,6 @@ import android.view.Window;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
@@ -53,10 +41,7 @@ import android.content.SharedPreferences;
 
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Hashtable;
-import java.util.List;
 import java.util.regex.Pattern;
 
 
@@ -75,7 +60,6 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 	
 	int width;
 	int height;
-	//int dstLeft, dstTop, dstWidth, dstHeight;
 	int dstLeft = 0;
 	int dstTop = 0;
 	int dstWidth = 0;
@@ -95,18 +79,11 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 
 	public boolean flag_light=false;
 	private boolean flag_IsGetImg=true;
-//	ImageScanner scanner;
-	
-	ProgressView pv=null;
-	
+
 	AudioManager audioManager;
 	
 	byte[] myYUV;
 	long retNumber=0;
-	//String strResultCode;
-	String strxmlResult;
-//	Decoding dc = null;
-//	SCDecode dc = null;
 	Bitmap mBitmap;
 	PlanarYUVLuminanceSource source;
 	byte[] tempData;
@@ -118,8 +95,6 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
-		int nCMYKMode = 0;
-    	int nInvertColorMode = 0;
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);  
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN); 
@@ -127,8 +102,6 @@ public class testdecode extends Activity implements OnClickListener, Runnable
         setContentView(R.layout.testdecode);
 
         audioManager = (AudioManager) getSystemService(Service.AUDIO_SERVICE);
- /*       Decoding dc = new Decoding();
-        long retNumber = dc.decodImg(bmp);*/
 
 		DisplayMetrics  dm =new DisplayMetrics(); 
         getWindowManager().getDefaultDisplay().getMetrics(dm);  
@@ -160,12 +133,6 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 		m_bInvertColorMode = preferences.getBoolean("BInvertColor", false);
 		flag_DecodeMode = preferences.getInt("CodeType", 0);
 
-//		if(dc == null)
-//		{
-////			dc=new Decoding();
-//			dc = new SCDecode();
-//		}
-//		dc.SetDefaultParamete(0);
 		t1=new Thread(this);
 		myDecodThread=new DecodeThread();
 		
@@ -187,32 +154,29 @@ public class testdecode extends Activity implements OnClickListener, Runnable
     
 	public void startGetImgFrame()
 	{	
-	//	if(dstWidth==0)
+		Log.i("*", "startGetImgFrame");
+		DisplayMetrics metrics = new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(metrics);
+		dstLeft = (literCenter.getLeft()+imgView.getLeft()) * width/ metrics.widthPixels;
+		dstTop = (literImg.getTop()+imgView.getTop()) * height/ metrics.heightPixels;
+		dstWidth = (imgView.getRight() - imgView.getLeft())* width/metrics.widthPixels;;
+		dstHeight = (imgView.getBottom() - imgView.getTop())* height/metrics.heightPixels;
+		Log.i("process","processing...");
+		while((dstLeft&0x03) > 0)
 		{
-			Log.i("*", "startGetImgFrame");
-			DisplayMetrics metrics = new DisplayMetrics();
-			getWindowManager().getDefaultDisplay().getMetrics(metrics);
-			dstLeft = (literCenter.getLeft()+imgView.getLeft()) * width/ metrics.widthPixels;
-			dstTop = (literImg.getTop()+imgView.getTop()) * height/ metrics.heightPixels;
-			dstWidth = (imgView.getRight() - imgView.getLeft())* width/metrics.widthPixels;;
-			dstHeight = (imgView.getBottom() - imgView.getTop())* height/metrics.heightPixels;
-			Log.i("process","processing...");
-			while((dstLeft&0x03) > 0)
-	        {
-				dstLeft++;
-	        }
-	        if((dstTop & 0x01)>0)
-	        {
-	            dstTop++;
-	        }
-	        while((dstWidth & 0x03)>0)
-	        {
-	            dstWidth++;
-	        }
-	        if((dstHeight & 0x01)>0)
-	        {
-	        	dstHeight++;
-	        }
+			dstLeft++;
+		}
+		if((dstTop & 0x01)>0)
+		{
+			dstTop++;
+		}
+		while((dstWidth & 0x03)>0)
+		{
+			dstWidth++;
+		}
+		if((dstHeight & 0x01)>0)
+		{
+			dstHeight++;
 		}
 		try{
 			sfhCamera.startGetImgFrame();
@@ -228,11 +192,8 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 		{
 			try
 			{
-				//camera.stopPreview();
-				//camera.release();
 				sfhCamera=null;
 				sfhCamera = new SFHCamera(sfvCamera.getHolder(), screenWidth, screenHeight,previewCallback, errorCallback);
-				//sfhCamera.createCamera(PixelFormat.YCbCr_422_SP);
 				sfhCamera.createCamera(ImageFormat.NV21);
 				Log.i("callback", "Here is the error call back");
 			}
@@ -291,9 +252,7 @@ public class testdecode extends Activity implements OnClickListener, Runnable
     @Override 
     public void onClick(View view)
     {
-    	//myDecodThread.suspend();
     	bClickBtn = true;
-    	Intent intent=null;
     	bClickBtn = false;
     }
 
@@ -443,7 +402,7 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 	{   
 	    Pattern pattern = Pattern.compile("[0-9]*");   
 	    return pattern.matcher(str).matches();      
-	 } 
+	}
 	class DecodeThread extends Thread {
 		@Override
 		public void run() {
@@ -455,36 +414,23 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 
 			mBitmap = source.renderCroppedGreyscaleBitmap();
 			myYUV=source.getTheYUV();
-//			if(dc == null)
-//			{
-////				    dc=new Decoding();
-//				dc = new SCDecode();
-//			}
 
 			retNumber=0;
 			String retString="";
-//			retNumber=dc.decodeBitmap(mBitmap);
-//				retNumber=dc.decodeYUV(myYUV,dstWidth,dstHeight,flag_DecodeMode);
+
 			//now add my code to replace original decode process using .so
 			try {
-//				retNumber = decodeBitMap(bitmap,mBitmap);
 				retString = decodeBitMap(bitmap,mBitmap);
 
 			} catch (NotFoundException e) {
 				e.printStackTrace();
 			}
-			//
 
-//			Log.i("result", String.valueOf(retNumber));
 			Log.i("result", retString);
 
-
-//			if(retNumber!=0&&retNumber!=-1)
-				if(retString.length()>5&&retString.contains("\n"))
-
-				{
+			if(retString.length()>5&&retString.contains("\n")) {
 				//now we get the net string and play the multimeida data, so we need not show the decode result activity
-			   //we add these codes to get media data and play
+			    //we add these codes to get media data and play
 				String ret= String.valueOf(retNumber);
 				int num=12-ret.length();
 				if(num>0)
@@ -499,19 +445,15 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 				ByteArrayOutputStream stream = new ByteArrayOutputStream();
 				mBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
 				byte[] bytes = stream.toByteArray();
-				//
 
 				Intent intent=new Intent(testdecode.this,ScanResult.class);
 				intent.putExtra("flag", 2);
 				intent.putExtra("type", flag_DecodeMode);
 				Date now=new Date(System.currentTimeMillis());
 				intent.putExtra("time", now.toString());
-//					intent.putExtra("bmp", mBitmap);
 				intent.putExtra("bmp", bytes);
 				intent.putExtra("number", retString);
-//					intent.putExtra("number", String.valueOf(retNumber));
-
-					startActivity(intent);
+				startActivity(intent);
 
 			}
 		}
@@ -521,8 +463,6 @@ public class testdecode extends Activity implements OnClickListener, Runnable
     {
 		Log.i("*", "onResume");
         super.onResume();
-//        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
-        int ii = 0;
     }
 
 	public String decodeBitMap(BinaryBitmap bitmap,Bitmap grayMap) throws NotFoundException {
@@ -535,8 +475,6 @@ public class testdecode extends Activity implements OnClickListener, Runnable
         int indexJ=0;
         boolean alreadyOne=false;
         boolean lineChange=false;
-
-
 
 		//now add find direction and chose edge line
 		ArrayList<Point> pointArrayList=new ArrayList<>();
@@ -551,169 +489,26 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 				String str="";
 				for(int j=0;j<binaryMatrix.height;j++){
 					if(!binaryMatrix.get(i,j)) {
-//						str = grayMap.getPixel(i,j)+"|"+str;
 						grayMap.setPixel(i,j,0xff000000);
 						bitsBool[grayMap.getHeight()-1-j][i] = false;
 					}
 					else {
-//						str = grayMap.getPixel(i,j)+"|"+str;
 						grayMap.setPixel(i,j,0xffffffff);
 						bitsBool[grayMap.getHeight()-1-j][i] = true;
 					}
-//					System.out.print(binaryMatrix.get(i,j));
 				}
-//				Log.w("poi",str);
-
-//				System.out.println();
 			}
 
-//			if (true)
-//				return "000000000\n";
+			Log.w("before rotate ",""+bitsBool.length+"|"+bitsBool[0].length);
 
-			//now find binarization boolean for hough
-			int lowerBound=200;
-			int higherBound=50;
-//			for(int i=0;i<grayMap.getWidth();i++){
-//				for(int j=0;j<grayMap.getHeight();j++){
-//					int temp=grayMap.getPixel(i,j);
-//					int transTemp=(temp&0xff);
-//					if(transTemp>higherBound)
-//						higherBound=transTemp;
-//
-//					if(transTemp<lowerBound)
-//						lowerBound=transTemp;
-//				}
-//			}
-//
-//			//need to reuse later
-//			for(int i=0;i<grayMap.getWidth();i++){
-//				String str="";
-//				for(int j=0;j<grayMap.getHeight();j++){
-//					//can use getPixels to optimaize
-//					int temp=grayMap.getPixel(i,j);
-//					int transTemp=(temp&0xff);
-//					if(transTemp>(lowerBound+higherBound)/2) {
-//						str = "_"+str;
-////						grayMap.setPixel(i,j,0);
-//						bitsBool[grayMap.getHeight()-1-j][i] = false;
-//					}
-//					else {
-//						str = "*"+str;
-////						grayMap.setPixel(i,j,255);
-//						bitsBool[grayMap.getHeight()-1-j][i] = true;
-//					}
-//				}
-//				Log.w("poi",str);
-//			}
-			Log.w("before rotate ",""+grayMap.getWidth()+"|"+grayMap.getHeight());
-
-
-			//now add rotate and find standard
-//			ArrayData inputData = getArrayDataFromImage(grayMap);
-//			int minContrast =5;// (args.length >= 4) ? 64 : Integer.parseInt(args[4]);
-//			ArrayData outputData = houghTransform(inputData, 180, (int)Math.hypot(inputData.width,inputData.height), minContrast,bitsBool);
-//
-//			//print result
-//			int best=0;
-//			for(int i=0;i<outputData.width;i++){
-//				int tempresult=0;
-//				boolean tempStart=false;
-//				boolean tempEnd=false;
-//				for(int j=0;j<outputData.height;j++){
-//					if(!tempStart&&outputData.get(i,j)!=0)
-//						tempStart=true;
-//					if(tempStart&&!tempEnd&&outputData.get(i,j)==0)
-//						tempresult++;
-//
-//					if(tempStart&&!tempEnd&&outputData.get(i,j)==0&&(j+1)<outputData.height
-//							&&outputData.get(i,j+1)==0&&(j+2)<outputData.height&&outputData.get(i,j+2)==0)
-//						tempEnd=true;
-//					System.out.print(outputData.get(i,j)+"|");
-//				}
-//				if(tempresult>best) {
-//					best = tempresult;
-//					bestTheta=i;
-//				}
-//			System.out.println(i+":"+tempresult);
-////			System.out.println();
-//			}
-//			System.out.println("best:"+bestTheta+"|"+best);
-//			List<Double> doubleList=new ArrayList<>();
-//			for(int i=2;i<outputData.height-2;i++){
-//				if(outputData.get(bestTheta, i)>outputData.get(bestTheta,i-1)&&outputData.get(bestTheta,i)>outputData.get(bestTheta,i+1)) {
-////				System.out.println(i + ":" + (double) outputData.get(bestTheta, i) / (double) (outputData.get(bestTheta, i - 1) + outputData.get(bestTheta, i)+outputData.get(bestTheta, i + 1)));
-//					doubleList.add((double) outputData.get(bestTheta, i) / (double) (outputData.get(bestTheta, i - 1) +outputData.get(bestTheta, i)+ outputData.get(bestTheta, i + 1)));
-//
-//				}
-//				else {
-////				System.out.println(i+":"+0.0);
-//				}
-//			}
-//
-//			double[] doubles=new double[6];
-//			int[] ints=new int[6];
-//			for(int i=0;i<doubleList.size();i++){
-//				doubles[i%6]+=doubleList.get(i);
-//				ints[i%6]++;
-//			}
-//
-//			int standardIndex=0;
-//			double standardRate=0;
-//			for(int i=0;i<6;i++){
-//				System.out.println(i+":"+doubles[i]/ints[i]);
-//				if(doubles[i]/ints[i]>standardRate){
-//					standardIndex=i;
-//					standardRate=doubles[i]/ints[i];
-//				}
-//			}
-//
-//			System.out.println("size:"+doubleList.size());
-//			int finalStandard=(doubleList.size()%6+6-standardIndex-1)%6;
-//			System.out.println("standard:" + finalStandard);
-//
-//			Log.w("best theta",bestTheta+"|"+finalStandard);
-
-
-
-//			Matrix tempTransMatrix = new Matrix();
-//			tempTransMatrix.postRotate(bestTheta-90);
-//			grayMap= Bitmap.createBitmap(grayMap, 0, 0, grayMap.getWidth(), grayMap.getHeight(), tempTransMatrix, true);
-//			Log.w("after rotate ",""+grayMap.getWidth()+"|"+grayMap.getHeight());
-//
-//			//end of rotate
-//
-//			Log.w("height and width:",grayMap.getHeight()+"|"+grayMap.getWidth());
-//
-//			//need to reuse later
-//            for(int i=0;i<grayMap.getWidth();i++){
-//                String str="";
-//				for(int j=0;j<grayMap.getHeight();j++){
-//					//can use getPixels to optimaize
-//                    int temp=grayMap.getPixel(i,j);
-//                    int transTemp=(temp&0xff);
-//                    if(transTemp>(lowerBound+higherBound)/2||(transTemp==0)) {
-//                        str = "_"+str;
-//                        bitsBool[grayMap.getHeight()-1-j][i] = false;
-//                    }
-//                    else {
-//                        str = "*"+str;
-//                        bitsBool[grayMap.getHeight()-1-j][i] = true;
-//
-//                    }
-//                }
-//                Log.w("poi",str);
-//            }
-
-			//another way to find theta, with finding nearest points and extend
+			//find theta, with finding nearest points and extend, first find points' x and y
 			for (int j = 0; j < width; j++) {
 				for (int i = 0; i < height; i++) {
-//                    Log.w("d","dddddd");
 					if(whetherChecked[i][j]){
 						lineChange=true;
 						alreadyOne=true;
 					}else
 					if(bitsBool[i][j]){
-//                        whetherChecked[i][j]=true;
 
 						int originX=j;
 						int originY=i;
@@ -726,8 +521,6 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 						int xs=j,xe=j,ys=i,ye=i;
 
 						while(true){
-//                            Log.w("pos:",""+changeX+"|"+changeY+"|"+originX+"|"+originY+"|"+lastMove);
-//                            int thisMove=(lastMove+7)/4;
 							if(lastMove==0){
 								if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
 									changeY--;
@@ -802,29 +595,22 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 								break;
 						}
 
-
-
-//						Log.w("loc","here|"+xs+"|"+xe+"|"+ys+"|"+ye);
 						for(int setI=ys;setI<=ye;setI++){
 							for(int setJ=xs;setJ<=xe;setJ++){
 								whetherChecked[setI][setJ] = true;
 							}
 						}
 
-//						System.out.println("loc1");
 						float centX = (xs+xe)/2;
 						float centY = (ys+ye)/2;
 
 						pointArrayList.add(new Point(centX,centY));
-//						System.out.println("loc2");
-
 					}
 				}
 
 			}
 
-			//the new way of finding theta
-			int[] countTheta=new int[18];
+			//finding theta
 			double foundTheta=0;
 			boolean whetherFound = false;
 			int countSelectingPoint=0;
@@ -839,13 +625,9 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 				Collections.sort(pointArrayList);
 
 				double[][] fourPoints = new double[4][2];
-				double addDistance = 0;
-				double addCrossDis = 0;
 				for (int i = 1; i < 5; i++) {
 					fourPoints[i - 1][0] = pointArrayList.get(i).getCentX();
 					fourPoints[i - 1][1] = pointArrayList.get(i).getCentY();
-//                    System.out.println("dis:" + pointArrayList.get(i).distance);
-					addDistance += pointArrayList.get(i).distance;
 				}
 
 				int m=0, n=0;
@@ -876,75 +658,18 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 						}
 					}
 				}
-//				for (int i = 0; i < 3; i++) {
-//					if (i == 0) {
-//						m = 1;
-//						n = 2;
-//					} else if (i == 1) {
-//						m = 0;
-//						n = 2;
-//					} else {
-//						m = 0;
-//						n = 1;
-//					}
-//					if (linesIntersect(fourPoints[i][0], fourPoints[i][1], fourPoints[3][0], fourPoints[3][1],
-//							fourPoints[m][0], fourPoints[m][1], fourPoints[n][0], fourPoints[n][1])) {
-//						double disPair = pointArrayList.get(4).distance + pointArrayList.get(i + 1).distance;
-//						double ratePair = (pointArrayList.get(4).distance / pointArrayList.get(i + 1).distance);
-//						Point[] possiblePoints = new Point[4];
-//						if (1.053 > ratePair && ratePair > 0.95 && Math.hypot((fourPoints[3][1] - fourPoints[i][1]), (fourPoints[3][0] - fourPoints[i][0])) / disPair > 0.95) {
-//							possiblePoints[0] = new Point((2 * pointArrayList.get(4).centX - midPoint.centX), (2 * pointArrayList.get(4).centY - midPoint.centY));
-//							possiblePoints[1] = new Point((2 * pointArrayList.get(i + 1).centX - midPoint.centX), (2 * pointArrayList.get(i + 1).centY - midPoint.centY));
-//
-//
-//						} else {
-//
-//							disPair = pointArrayList.get(m + 1).distance + pointArrayList.get(n + 1).distance;
-//							ratePair = (pointArrayList.get(m + 1).distance / pointArrayList.get(n + 1).distance);
-//							if (1.053 > ratePair && ratePair > 0.95 && Math.hypot((fourPoints[m][1] - fourPoints[n][1]), (fourPoints[m][0] - fourPoints[n][0])) / disPair > 0.95) {
-//								possiblePoints[2] = new Point((2 * pointArrayList.get(m + 1).centX - midPoint.centX), (2 * pointArrayList.get(m + 1).centY - midPoint.centY));
-//								possiblePoints[3] = new Point((2 * pointArrayList.get(n + 1).centX - midPoint.centX), (2 * pointArrayList.get(n + 1).centY - midPoint.centY));
-//
-//							}
-//						}
-//
-//						int findResult = findLinePoint(possiblePoints, pointArrayList);
-//						if (findResult != -1){
-//							whetherFound = true;
-////                            System.out.println("find:" + findResult);
-//
-//
-//							if (findResult < 2) {
-//								foundTheta=Math.atan((fourPoints[3][1] - fourPoints[i][1]) / (fourPoints[3][0] - fourPoints[i][0])) / Math.PI * 180;
-//								System.out.println(Math.atan((fourPoints[3][1] - fourPoints[i][1]) / (fourPoints[3][0] - fourPoints[i][0])) / Math.PI * 180);
-//								countTheta[Math.atan((fourPoints[3][1] - fourPoints[i][1]) / (fourPoints[3][0] - fourPoints[i][0])) < 0 ? (int) (Math.atan((fourPoints[3][1] - fourPoints[i][1]) / (fourPoints[3][0] - fourPoints[i][0])) / Math.PI * 18 + 18) : (int) (Math.atan((fourPoints[3][1] - fourPoints[i][1]) / (fourPoints[3][0] - fourPoints[i][0])) / Math.PI * 18)]++;
-////                                System.out.println(points[3][1] + "|" + points[3][0] + "|" + points[i][1] + "|" + points[i][0] + "|" + midPoint.centY + "|" + midPoint.centX);
-//							} else {
-//								foundTheta=Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) / Math.PI * 180;
-//								System.out.println(Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) / Math.PI * 180);
-////                                System.out.println(points[m][1] + "|" + points[m][0] + "|" + points[n][1] + "|" + points[n][0] + "|" + midPoint.centY + "|" + midPoint.centX);
-//								countTheta[Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) < 0 ? (int) (Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) / Math.PI * 18 + 18) : (int) (Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) / Math.PI * 18)]++;
-//
-//							}
-//							break;
-//						}
-//					}
-//				}
 			}
 
 			if(!whetherFound)
 				return "-1"+countSelectingPoint;
 
-
-
-			//now trans binarization result in BinaryBitmap to bitmap
-
 			//rotate
 			Matrix tempTransMatrix = new Matrix();
 			tempTransMatrix.postRotate((float)(foundTheta-90));
 			grayMap= Bitmap.createBitmap(grayMap, 0, 0, grayMap.getWidth(), grayMap.getHeight(), tempTransMatrix, true);
-			Log.w("after rotate",""+grayMap.getWidth()+"|"+grayMap.getHeight());
 			//end of rotate
+
+			Log.w("after rotate ",""+bitsBool.length+"|"+bitsBool[0].length);
 
 			//now start finding points after rotate
 			//how new bitmap get into old width and height?
@@ -956,35 +681,27 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 					int transTemp=(temp&0xff);
 					if(transTemp==0) {
 						str = "_"+str;
-//						grayMap.setPixel(i,j,0);
 						bitsBool[grayMap.getHeight()-1-j][i] = false;
 					}
 					else {
 						str = "*"+str;
-//						grayMap.setPixel(i,j,255);
 						bitsBool[grayMap.getHeight()-1-j][i] = true;
 					}
 				}
 				Log.w("poi",str);
 			}
 
-//			if(true)
-//				return "000000000000\n";
-
 			whetherChecked=new boolean[height][width];
 
-//			int linesIndex=0;
 			boolean firstRound=true;
 			double interval=0.0;
             for (int j = 0; j < width; j++) {
                 for (int i = 0; i < height; i++) {
-//                    Log.w("d","dddddd");
 					if(whetherChecked[i][j]){
 						lineChange=true;
 						alreadyOne=true;
 					}else
                     if(bitsBool[i][j]){
-//                        whetherChecked[i][j]=true;
 
                         int originX=j;
                         int originY=i;
@@ -997,8 +714,6 @@ public class testdecode extends Activity implements OnClickListener, Runnable
                         int xs=j,xe=j,ys=i,ye=i;
 
                         while(true){
-//                            Log.w("pos:",""+changeX+"|"+changeY+"|"+originX+"|"+originY+"|"+lastMove);
-//                            int thisMove=(lastMove+7)/4;
                             if(lastMove==0){
                                 if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
                                     changeY--;
@@ -1086,7 +801,7 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 						float centY = (ys+ye)/2;
 
 						//remove spots
-						if(Math.abs(xe-xs)>=2&&Math.abs(ye-ys)>=2)
+						if(Math.abs(xe-xs)>=2||Math.abs(ye-ys)>=2)
 							pointArrayList.add(new Point(centX,centY));
 
 						if(firstRound) {
@@ -1098,16 +813,11 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 								points[indexI][indexJ][1] = centY;
 							}else
 							for(int m=0;m<(20-1);m++){
-//								Log.w("index",""+m);
 								if(Math.abs(centY-points[0][m][1])>Math.abs(centY-points[0][m+1][1])){
 									if(points[0][m+1][1]==0f)
 										Log.w("already"," exceed limit !!!!");
 								}else{
-//									if(){
-//										//handle accident dot in not head line
-//									}
 									double tempIndexI=(centX-points[0][m][0])/interval;
-//									Log.w("interval:",""+interval+";"+tempIndexI);
 									double floorIndexI=Math.floor(tempIndexI);
 									if(tempIndexI-floorIndexI>0.5)
 										indexI=(int)floorIndexI+1;
@@ -1148,7 +858,6 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 					sortPoints(points);
 					Log.w("e","sort !!!!!!!!!!!!!!!!");
 
-					//
 					for(int i=0;i<20;i++){
 						if(points[0][i][0]==0f&&points[0][i][1]==0f&&i>0){
 							interval=(points[0][i-1][1]-points[0][0][1])/(double)(i-1);
@@ -1173,7 +882,6 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 						}
 					}
 
-//					linesIndex++;
                     if(indexI<19&&!firstRound) {
 
                         indexI++;
@@ -1187,12 +895,7 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 
             }
 
-
-
-//			if (true)
-//				return "000000000000\n";
 			sortPoints(points);
-
 
             for(int i=0;i<20;i++){
                 String str="";
@@ -1242,55 +945,12 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 				}
 				Log.w("points:",str);
 			}
-//			if(true)
-//				return "-100000000000";
-
-			//no actual use anymore
-//			float[][][] tempPoints=new float[20][20][2];
-//			int tempPointsIndex=0;
-//			for(int i=0;i<20;i++){
-//				if(points[i][6][0]!=0||points[i][6][1]!=0){
-//					for(int j=0;j<20;j++){
-//						tempPoints[tempPointsIndex][j][0]=points[i][j][0];
-//						tempPoints[tempPointsIndex][j][1]=points[i][j][1];
-//
-//					}
-//					tempPointsIndex++;
-//				}
-//			}
-//
-//			points=tempPoints;
-
-			//now start process
-//			float internalX = (points[0][6][1]-points[0][0][1])/6;//row
-//			float internalY = (points[6][0][0]-points[0][0][0])/6;//shulie
-//			float[] columnInternal=new float[6];
-//			for(int i=0;i<6;i++){
-//				columnInternal[i] = points[0][0][0]+i*internalX;
-//			}
-			Log.w("interval:",(interval/14.8)+"");
 			String charResult = "";
 			String retString="";
 			for(int i=0;i<10;i++){
-//				internalX = (points[i][6][1]-points[i][0][1])/6;
 				for(int j=0;j<10;j++){
-//					if(points[i][j][0]!=0||points[i][j][1]!=0){
-//						Log.w("2",""+internalY);
-//						internalY = (points[6][j][0]-points[0][j][0])/6;
-
 						int x=0;
 						int y=0;
-//						if(points[i][j][0]<(points[0][j][0]+i*internalY)-4){
-//							x=-1;
-//						}else if(points[i][j][0]>(points[0][j][0]+i*internalY)+4){
-//							x=1;
-//						}
-//
-//						if(points[i][j][1]<(points[i][0][1]+j*internalX)-4){
-//							y=-1;
-//						}else if(points[i][j][1]>(points[i][0][1]+j*internalX)+4){
-//							y=1;
-//						}
 						float expectX=(points[6][j][0]-points[0][j][0])*i/6+points[0][j][0];
 						float expectY=(points[6][j][1]-points[0][j][1])*i/6+points[0][j][1];
 						charResult=charResult+"("+formatString(expectX+"",5).substring(0,5)+";"+formatString(expectY+"",5).substring(0,5)+")";
@@ -1408,22 +1068,13 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 							}
 						}
 
-//						Log.w("",x+"|"+y);
-//					}
 				}
-//				retString=formatString(retString,i*12+10);
 				retString+="\n";
 				Log.w("",charResult);charResult="";
 			}
-//			Log
-
             return retString;
         }
 
-
-
-
-		//
 		return result+"";
 	}
 
@@ -1436,13 +1087,13 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 					if(points[i][k][1]==0f&&points[i][k][0]==0f)
 						break;
 					if(points[i][j][1]>points[i][k][1])
-						swaoPoints(i,j,i,k,points);
+						swapPoints(i, j, i, k, points);
 				}
 			}
 		}
 	}
 
-	public static void swaoPoints(int i1, int j1,int i2,int j2,float[][][] points){
+	public static void swapPoints(int i1, int j1, int i2, int j2, float[][][] points){
 		float tempX=points[i1][j1][0];
 		float tempY=points[i1][j1][1];
 		points[i1][j1][0]=points[i2][j2][0];
@@ -1457,160 +1108,6 @@ public class testdecode extends Activity implements OnClickListener, Runnable
         }
         return str;
     }
-
-	private class XstartAndEnd{
-		int xs=0;
-		int xe=0;
-		XstartAndEnd(){}
-
-		public void setXs(int xs){
-			this.xs=xs;
-		}
-
-		public void setXe(int xe){
-			this.xe=xe;
-		}
-	}
-
-	//following is the rotating and finding standard line
-	public static ArrayData houghTransform(ArrayData inputData, int thetaAxisSize, int rAxisSize, int minContrast, boolean[][] bitsBool)
-	{
-		int width = inputData.width;
-		int height = inputData.height;
-		int maxRadius = (int)Math.ceil(Math.hypot(width, height));
-		int halfRAxisSize = rAxisSize >>> 1;
-		ArrayData outputData = new ArrayData(thetaAxisSize, rAxisSize);
-		// x output ranges from 0 to pi
-		// y output ranges from -maxRadius to maxRadius
-		double[] sinTable = new double[thetaAxisSize];
-		double[] cosTable = new double[thetaAxisSize];
-		for (int theta = thetaAxisSize - 1; theta >= 0; theta--)
-		{
-			double thetaRadians = theta * Math.PI / thetaAxisSize;
-			sinTable[theta] = Math.sin(thetaRadians);
-			cosTable[theta] = Math.cos(thetaRadians);
-		}
-
-		for (int y = height - 1; y >= 0; y--)
-		{
-			for (int x = width - 1; x >= 0; x--)
-			{
-//				if (inputData.contrast(x, y, minContrast))
-				if(bitsBool[y][x])
-				{
-					for (int theta = thetaAxisSize - 1; theta >= 0; theta--)
-					{
-						double r = cosTable[theta] * x + sinTable[theta] * y;
-						int rScaled = (int)Math.round(r * halfRAxisSize / maxRadius) + halfRAxisSize;
-						outputData.accumulate(theta, rScaled, 1);
-					}
-				}
-			}
-		}
-		return outputData;
-	}
-
-	public static class ArrayData
-	{
-		public final int[] dataArray;
-		public final int width;
-		public final int height;
-
-		public ArrayData(int width, int height)
-		{
-			this(new int[width * height], width, height);
-		}
-
-		public ArrayData(int[] dataArray, int width, int height)
-		{
-			this.dataArray = dataArray;
-			this.width = width;
-			this.height = height;
-		}
-
-		public int get(int x, int y)
-		{  return dataArray[y * width + x];  }
-
-		public void set(int x, int y, int value)
-		{  dataArray[y * width + x] = value;  }
-
-		public void accumulate(int x, int y, int delta)
-		{  set(x, y, get(x, y) + delta);  }
-
-		public boolean contrast(int x, int y, int minContrast)
-		{
-			int centerValue = get(x, y);
-			for (int i = 8; i >= 0; i--)
-			{
-				if (i == 4)
-					continue;
-				int newx = x + (i % 3) - 1;
-				int newy = y + (i / 3) - 1;
-				if ((newx < 0) || (newx >= width) || (newy < 0) || (newy >= height))
-					continue;
-				if (Math.abs(get(newx, newy) - centerValue) >= minContrast)
-					return true;
-			}
-			return false;
-		}
-
-		public int getMax()
-		{
-			int max = dataArray[0];
-			for (int i = width * height - 1; i > 0; i--)
-				if (dataArray[i] > max)
-					max = dataArray[i];
-			return max;
-		}
-	}
-
-	public static ArrayData getArrayDataFromImage(Bitmap graymap)
-	{
-		int width = graymap.getWidth();
-		int height = graymap.getHeight();
-		ArrayData arrayData = new ArrayData(width, height);
-		// Flip y axis when reading image
-		for (int y = 0; y < height; y++)
-		{
-			for (int x = 0; x < width; x++)
-			{
-//				int rgbValue=graymap.getPixel(x,y);
-//				rgbValue = (int)(((rgbValue & 0xFF0000) >>> 16) * 0.30 + ((rgbValue & 0xFF00) >>> 8) * 0.59 + (rgbValue & 0xFF) * 0.11);
-				System.out.print((graymap.getPixel(x,y)  & 0xFF )+"|");
-				arrayData.set(x, height - 1 - y, (graymap.getPixel(x,y) & 0xFF));
-			}
-			System.out.println();
-		}
-		return arrayData;
-	}
-
-	private Bitmap binarization(Bitmap bitmap, int lowColor, int highColor) {
-		int width = bitmap.getWidth();
-		int height = bitmap.getHeight();
-		int pixels[] = new int[width * height];
-		bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
-		LuminanceSource source = new RGBLuminanceSource(width, height, pixels);
-		Binarizer binarizer = new HybridBinarizer(source);
-
-		Bitmap result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-
-		try {
-			BitMatrix matrix = binarizer.getBlackMatrix();
-			for (int i = 0; i < height; i++) {
-				for (int j = 0; j < width; j++) {
-					if (matrix.get(j, i)) {
-						result.setPixel(j, i, highColor);
-					} else {
-						result.setPixel(j, i, lowColor);
-					}
-				}
-			}
-		} catch (NotFoundException e) {
-			e.printStackTrace();
-		}
-
-		return result;
-	}
 
 	public static int findLinePoint(Point[] possiblePoints, ArrayList<Point> pointsList){
 		if(possiblePoints[0]!=null){
@@ -1629,58 +1126,6 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 					return 0;
 			}
 		}
-//		for(int i=0;i<2;i++){
-//			if(possiblePoints[2*i]!=null){
-//				for(int j=0;j<pointsList.size();j++){
-//					pointsList.get(j).setDistanceTo(possiblePoints[2*i]);
-//				}
-//				Collections.sort(pointsList);
-//				System.out.println("nearest1:"+pointsList.get(0).distance);
-//				if(pointsList.get(0).distance<2) {
-//					for(int j=0;j<pointsList.size();j++){
-//						pointsList.get(j).setDistanceTo(possiblePoints[2*i+1]);
-//					}
-//					Collections.sort(pointsList);
-//					System.out.println("nearest2:" + pointsList.get(0).distance);
-//					if(pointsList.get(0).distance<2)
-//						return 2*i;
-//				}
-//			}
-//		}
 		return -1;
-	}
-
-	public static boolean linesIntersect(double x1, double y1, double x2, double y2, double x3,
-										 double y3, double x4, double y4) {
-        /*
-         * A = (x2-x1, y2-y1) B = (x3-x1, y3-y1) C = (x4-x1, y4-y1) D = (x4-x3,
-         * y4-y3) = C-B E = (x1-x3, y1-y3) = -B F = (x2-x3, y2-y3) = A-B Result
-         * is ((AxB) (AxC) <=0) and ((DxE) (DxF) <= 0) DxE = (C-B)x(-B) =
-         * BxB-CxB = BxC DxF = (C-B)x(A-B) = CxA-CxB-BxA+BxB = AxB+BxC-AxC
-         */
-		x2 -= x1; // A
-		y2 -= y1;
-		x3 -= x1; // B
-		y3 -= y1;
-		x4 -= x1; // C
-		y4 -= y1;
-		double AvB = x2 * y3 - x3 * y2;
-		double AvC = x2 * y4 - x4 * y2;
-		// Online
-		if (AvB == 0.0 && AvC == 0.0) {
-			if (x2 != 0.0) {
-				return (x4 * x3 <= 0.0)
-						|| ((x3 * x2 >= 0.0) && (x2 > 0.0 ? x3 <= x2 || x4 <= x2 : x3 >= x2
-						|| x4 >= x2));
-			}
-			if (y2 != 0.0) {
-				return (y4 * y3 <= 0.0)
-						|| ((y3 * y2 >= 0.0) && (y2 > 0.0 ? y3 <= y2 || y4 <= y2 : y3 >= y2
-						|| y4 >= y2));
-			}
-			return false;
-		}
-		double BvC = x3 * y4 - x4 * y3;
-		return (AvB * AvC <= 0.0) && (BvC * (AvB + BvC - AvC) <= 0.0);
 	}
 }
