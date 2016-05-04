@@ -16,6 +16,7 @@ import com.google.zxing.LuminanceSource;
 import com.google.zxing.NotFoundException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.common.PerspectiveTransform;
 
 import foster.src.other.ProgressView;
 //import com.example.testdecode.Decoding;
@@ -932,7 +933,7 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 			}
 
 			if(!whetherFound)
-				return "-100000000000\n"+countSelectingPoint;
+				return "-1"+countSelectingPoint;
 
 
 
@@ -1202,20 +1203,64 @@ public class testdecode extends Activity implements OnClickListener, Runnable
                 Log.w("points:",str);
             }
 
-			float[][][] tempPoints=new float[20][20][2];
-			int tempPointsIndex=0;
-			for(int i=0;i<20;i++){
-				if(points[i][6][0]!=0||points[i][6][1]!=0){
-					for(int j=0;j<20;j++){
-						tempPoints[tempPointsIndex][j][0]=points[i][j][0];
-						tempPoints[tempPointsIndex][j][1]=points[i][j][1];
+			//add perspective transform
+			float[] xValues=new float[400];
+			float[] yValues=new float[400];
 
-					}
-					tempPointsIndex++;
+			PerspectiveTransform perspectiveTransform=PerspectiveTransform.quadrilateralToQuadrilateral(
+					points[0][0][0], points[0][0][1],
+					points[0][6][0], points[0][6][1],
+					points[6][0][0], points[6][0][1],
+					points[6][6][0], points[6][6][1],
+					50, 50,
+					50, 330,
+					330, 50,
+					330, 330);
+
+			for(int i=0;i<points.length;i++){
+				for(int j=0;j<points.length;j++){
+					xValues[i*20+j]=points[i][j][0];
+					yValues[i*20+j]=points[i][j][1];
 				}
 			}
 
-			points=tempPoints;
+			perspectiveTransform.transformPoints(xValues,yValues);
+
+			for(int i=0;i<points.length;i++){
+				for(int j=0;j<points.length;j++){
+					points[i][j][0]=xValues[i*20+j];
+					points[i][j][1]=yValues[i*20+j];
+				}
+			}
+
+			Log.w("","------------------------------------------------------------------------------");
+			for(int i=0;i<20;i++){
+				String str="";
+				for(int j=0;j<20;j++){
+					str+=formatString(""+points[i][j][0],5);
+					str+=formatString("|"+points[i][j][1],5);
+				}
+				Log.w("points:",str);
+			}
+//			if(true)
+//				return "-100000000000";
+
+			//no actual use anymore
+//			float[][][] tempPoints=new float[20][20][2];
+//			int tempPointsIndex=0;
+//			for(int i=0;i<20;i++){
+//				if(points[i][6][0]!=0||points[i][6][1]!=0){
+//					for(int j=0;j<20;j++){
+//						tempPoints[tempPointsIndex][j][0]=points[i][j][0];
+//						tempPoints[tempPointsIndex][j][1]=points[i][j][1];
+//
+//					}
+//					tempPointsIndex++;
+//				}
+//			}
+//
+//			points=tempPoints;
+
 			//now start process
 //			float internalX = (points[0][6][1]-points[0][0][1])/6;//row
 //			float internalY = (points[6][0][0]-points[0][0][0])/6;//shulie
@@ -1249,13 +1294,13 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 						float expectX=(points[6][j][0]-points[0][j][0])*i/6+points[0][j][0];
 						float expectY=(points[6][j][1]-points[0][j][1])*i/6+points[0][j][1];
 						charResult=charResult+"("+formatString(expectX+"",5).substring(0,5)+";"+formatString(expectY+"",5).substring(0,5)+")";
-						if(points[i][j][0]==0&&points[i][j][1]==0){
+						if(points[i][j][0]==points[19][19][0]&&points[i][j][1]==points[19][19][1]){
 							charResult+="*";
 							retString+="*";
 							continue;
 						}
 
-						double shreshhold=interval/14.8;//14.8 is from experience
+						double shreshhold=3.0;//14.8 is from experience
 						if(points[i][j][0]>expectX+3*shreshhold){
 							x=1;
 						}else if(points[i][j][0]>expectX+shreshhold){
@@ -1286,7 +1331,10 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 							}else if(y==-2){
 								charResult+="T";
 								retString+="T";
-							}else {
+							}else if(y==2){
+								charResult += "U";
+								retString+="U";
+							}else{
 								charResult += "A";
 								retString+="A";
 							}
@@ -1300,6 +1348,9 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 							}else if(y==-2){
 								charResult+="D";
 								retString+="D";
+							}else if(y==2){
+								charResult += "V";
+								retString+="V";
 							}else {
 								charResult += "E";
 								retString+="E";
@@ -1314,6 +1365,9 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 							}else if(y==-2){
 								charResult+="H";
 								retString+="H";
+							}else if(y==2){
+								charResult += "W";
+								retString+="W";
 							}else {
 								charResult += "I";
 								retString+="I";
@@ -1328,6 +1382,9 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 							}else if(y==-2){
 								charResult+="L";
 								retString+="L";
+							}else if(y==2){
+								charResult += "X";
+								retString+="X";
 							}else {
 								charResult += "M";
 								retString+="M";
@@ -1342,6 +1399,9 @@ public class testdecode extends Activity implements OnClickListener, Runnable
 							}else if(y==-2){
 								charResult+="P";
 								retString+="P";
+							}else if(y==2){
+								charResult += "Y";
+								retString+="Y";
 							}else {
 								charResult += "Q";
 								retString+="Q";
