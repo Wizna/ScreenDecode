@@ -2,64 +2,60 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
-    	<SurfaceView android:layout_height="fill_parent"
-		android:id="@+id/sfvCamera" 
+
+	<SurfaceView android:layout_height="fill_parent"
+	android:id="@+id/sfvCamera"
+	android:layout_width="fill_parent"
+	></SurfaceView>
+
+	<LinearLayout
+		android:id="@+id/linearLayout1"
 		android:layout_width="fill_parent"
-		></SurfaceView>
+		android:layout_height="fill_parent"
+		android:gravity="center" >
 
-    	<LinearLayout
-    	    android:id="@+id/linearLayout1"
-    	    android:layout_width="fill_parent"
-    	    android:layout_height="fill_parent" 
-    	    android:gravity="center" >
 
-    	    
-    		<LinearLayout
-    		    android:id="@+id/literCenter"
-    		    android:layout_width="wrap_content"
-    		    android:layout_height="fill_parent"
-    		    android:orientation="vertical"
-    		    android:gravity="center"  
-    		    android:layout_weight="4" >
+		<LinearLayout
+			android:id="@+id/literCenter"
+			android:layout_width="wrap_content"
+			android:layout_height="fill_parent"
+			android:orientation="vertical"
+			android:gravity="center"
+			android:layout_weight="4" >
 
-    			<LinearLayout
-    			    android:id="@+id/linearLayout5"
-    			    android:layout_width="fill_parent"
-    			    android:layout_height="wrap_content" 
-    			    android:gravity="center"  
-    			    android:layout_weight="1" 
-    			    android:background="#7f000000">
-    			         <TextView
-	                     android:id="@+id/txtip1"
-	                     android:layout_width="wrap_content"
-	                     android:layout_height="wrap_content"
-	                     android:layout_gravity="center"
-	                     android:layout_marginTop="5dp"
-	                     android:layout_marginBottom="5dp"
-	                     android:textColor="#FF0000"
-	                     android:text="Please put the image in the Frame" />
-    			</LinearLayout>
-    			<LinearLayout
-    			    android:id="@+id/literImg"
-    			    android:layout_width="fill_parent"
-    			    android:layout_height="wrap_content"
-    			    android:layout_weight="6"
-    			    android:background="@drawable/border"
-    			    android:gravity="center" >
+			<LinearLayout
+				android:id="@+id/linearLayout5"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:gravity="center"
+				android:layout_weight="1"
+				android:background="#7f000000">
+					 <TextView
+					 android:id="@+id/txtip1"
+					 android:layout_width="wrap_content"
+					 android:layout_height="wrap_content"
+					 android:layout_gravity="center"
+					 android:layout_marginTop="5dp"
+					 android:layout_marginBottom="5dp"
+					 android:textColor="#FF0000"
+					 android:text="Please put the image in the Frame" />
+			</LinearLayout>
+			<LinearLayout
+				android:id="@+id/literImg"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_weight="6"
+				android:background="@drawable/border"
+				android:gravity="center" >
 
-    			    <ImageView
-    			        android:id="@+id/ImageView01"
-    			        android:layout_width="182dp"
-    			        android:layout_height="167dp"
-    			        android:src="@drawable/focus" />
+				<ImageView
+					android:id="@+id/ImageView01"
+					android:layout_width="182dp"
+					android:layout_height="167dp"
+					android:src="@drawable/focus" />
 
-    			</LinearLayout>
-    		</LinearLayout>
-    		
-    	</LinearLayout>
-	<Button
-		android:id="@+id/btn01"
-		android:layout_width="50dp"
-		android:layout_height="20dp"
-		>catch</Button>
+			</LinearLayout>
+		</LinearLayout>
+
+	</LinearLayout>
 </FrameLayout>

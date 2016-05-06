@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.testdecode"
-        minSdkVersion 8
+        minSdkVersion 14
         targetSdkVersion 23
         multiDexEnabled true
     }
@@ -23,4 +23,6 @@ dependencies {
     compile 'com.android.support:support-v4:23.0.1'
     compile files('libs/core.jar')
     compile files('libs/java-rt-jar-stubs-1.5.0.jar')
+    compile 'com.android.support:support-v13:23.1.1'
+    compile 'com.android.support:appcompat-v7:23.1.1'
 }
