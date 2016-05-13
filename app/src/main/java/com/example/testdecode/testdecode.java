@@ -155,6 +155,7 @@ public class testdecode extends Activity implements Runnable
 	public void startGetImgFrame()
 	{	
 		Log.i("*", "startGetImgFrame");
+		System.out.println("start frame time:"+System.currentTimeMillis());
 		DisplayMetrics metrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(metrics);
 		dstLeft = (literCenter.getLeft()+imgView.getLeft()) * width/ metrics.widthPixels;
@@ -466,6 +467,10 @@ public class testdecode extends Activity implements Runnable
     }
 
 	public String decodeBitMap(BinaryBitmap bitmap,Bitmap grayMap) throws NotFoundException {
+		long[] times=new long[8];
+		times[0]=System.currentTimeMillis();
+		System.out.println("times:"+times[0]);
+
 		//no result, then return "0"
 		int result= 0;
         boolean[][] whetherChecked=new boolean[grayMap.getHeight()][grayMap.getWidth()];
@@ -496,6 +501,7 @@ public class testdecode extends Activity implements Runnable
 			}
 		}
 
+		times[1]=System.currentTimeMillis();
 		Log.w("before rotate ",""+bitsBool.length+"|"+bitsBool[0].length);
 
 		//find theta, with finding nearest points and extend, first find points' x and y
@@ -611,6 +617,7 @@ public class testdecode extends Activity implements Runnable
 			return "not enough points";
 		}
 		Log.w("e:","1");
+		times[2]=System.currentTimeMillis();
 		//finding theta
 		double foundTheta=0;
 		boolean whetherFound = false;
@@ -670,11 +677,14 @@ public class testdecode extends Activity implements Runnable
 		if(!whetherFound)
 			return "-1"+countSelectingPoint;
 
+		times[3]=System.currentTimeMillis();
 		//rotate
 		Matrix tempTransMatrix = new Matrix();
 		tempTransMatrix.postRotate((float)(foundTheta-90));
 		grayMap= Bitmap.createBitmap(grayMap, 0, 0, grayMap.getWidth(), grayMap.getHeight(), tempTransMatrix, true);
 		//end of rotate
+
+		times[4]=System.currentTimeMillis();
 
 		whetherChecked=new boolean[grayMap.getHeight()][grayMap.getWidth()];
 		bitsBool=new boolean[grayMap.getHeight()][grayMap.getWidth()];
@@ -683,22 +693,24 @@ public class testdecode extends Activity implements Runnable
 		//now start finding points after rotate
 		//how new bitmap get into old width and height?
 		for(int i=0;i<grayMap.getWidth();i++){
-			String str="";
+//			String str="";
 			for(int j=0;j<grayMap.getHeight();j++){
 				//can use getPixels to optimaize
 				int temp=grayMap.getPixel(i,j);
 				int transTemp=(temp&0xff);
 				if(transTemp==0) {
-					str = "_"+str;
+//					str = "_"+str;
 					bitsBool[grayMap.getHeight()-1-j][i] = false;
 				}
 				else {
-					str = "*"+str;
+//					str = "*"+str;
 					bitsBool[grayMap.getHeight()-1-j][i] = true;
 				}
 			}
-			Log.w("poi",str);
+//			Log.w("poi",str);
 		}
+
+		times[5]=System.currentTimeMillis();
 
 		boolean firstRound=true;
 		double interval=0.0;
@@ -797,7 +809,7 @@ public class testdecode extends Activity implements Runnable
 
 
 
-					Log.w("loc","here|"+xs+"|"+xe+"|"+ys+"|"+ye);
+//					Log.w("loc","here|"+xs+"|"+xe+"|"+ys+"|"+ye);
 					for(int setI=ys;setI<=ye;setI++){
 						for(int setJ=xs;setJ<=xe;setJ++){
 							whetherChecked[setI][setJ] = true;
@@ -897,18 +909,19 @@ public class testdecode extends Activity implements Runnable
 			lineChange=false;
 
 		}
+		//no use any more since points are already assign to their positions
+//		sortPoints(points);
 
-		sortPoints(points);
+//		for(int i=0;i<20;i++){
+//			String str="";
+//			for(int j=0;j<20;j++){
+//				str+=formatString(""+(int)points[i][j][0],3);
+//				str+=formatString("|"+(int)points[i][j][1],7);
+//			}
+//			Log.w("points:",str);
+//		}
 
-		for(int i=0;i<20;i++){
-			String str="";
-			for(int j=0;j<20;j++){
-				str+=formatString(""+(int)points[i][j][0],3);
-				str+=formatString("|"+(int)points[i][j][1],7);
-			}
-			Log.w("points:",str);
-		}
-
+		times[6]=System.currentTimeMillis();
 		//add perspective transform, 400 is the possible points in the picture, can vary for different phones
 		float[] xValues=new float[400];
 		float[] yValues=new float[400];
@@ -962,16 +975,16 @@ public class testdecode extends Activity implements Runnable
 			}
 		}
 
-		Log.w("","------------------------------------------------------------------------------");
-		for(int i=0;i<20;i++){
-			String str="";
-			for(int j=0;j<20;j++){
-				str+=formatString(""+points[i][j][0],5);
-				str+=formatString("|"+points[i][j][1],6);
-				str+=";";
-			}
-			Log.w("points:",str);
-		}
+//		Log.w("","------------------------------------------------------------------------------");
+//		for(int i=0;i<20;i++){
+//			String str="";
+//			for(int j=0;j<20;j++){
+//				str+=formatString(""+points[i][j][0],5);
+//				str+=formatString("|"+points[i][j][1],6);
+//				str+=";";
+//			}
+//			Log.w("points:",str);
+//		}
 		String charResult = "";
 		String retString="";
 		for(int i=0;i<10;i++){
@@ -1100,6 +1113,11 @@ public class testdecode extends Activity implements Runnable
 			Log.w("",charResult);charResult="";
 		}
 
+		times[7]=System.currentTimeMillis();
+		for(int i=0;i<8;i++){
+			System.out.println("time:"+times[i]);
+		}
+
 		int countT = retString.length() - retString.replace("T", "").length();
 		int countR = retString.length() - retString.replace("R", "").length();
 		if( countT > countR ){
@@ -1111,6 +1129,8 @@ public class testdecode extends Activity implements Runnable
 
 			return new StringBuilder(retString).reverse().toString().substring(1);
 		}
+
+
 		return retString;
 	}
 
