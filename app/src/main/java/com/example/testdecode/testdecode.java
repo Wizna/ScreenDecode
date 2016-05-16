@@ -467,14 +467,10 @@ public class testdecode extends Activity implements Runnable
     }
 
 	public String decodeBitMap(BinaryBitmap bitmap,Bitmap grayMap) throws NotFoundException {
-		long[] times=new long[8];
+		long[] times=new long[10];
 		times[0]=System.currentTimeMillis();
-		System.out.println("times:"+times[0]);
 
-		//no result, then return "0"
-		int result= 0;
         boolean[][] whetherChecked=new boolean[grayMap.getHeight()][grayMap.getWidth()];
-        boolean[][] bitsBool=new boolean[grayMap.getHeight()][grayMap.getWidth()];
         float[][][] points=new float[20][20][2];
         int indexI=0;
         int indexJ=0;
@@ -487,31 +483,32 @@ public class testdecode extends Activity implements Runnable
 		//try zxing binarization
 		BitMatrix binaryMatrix=bitmap.getBlackMatrix();
 
-		for(int i=0;i<binaryMatrix.width;i++){
-			String str="";
-			for(int j=0;j<binaryMatrix.height;j++){
-				if(!binaryMatrix.get(i,j)) {
-					grayMap.setPixel(i,j,0xff000000);
-					bitsBool[grayMap.getHeight()-1-j][i] = false;
-				}
-				else {
-					grayMap.setPixel(i,j,0xffffffff);
-					bitsBool[grayMap.getHeight()-1-j][i] = true;
-				}
+		//get bitmap from bitmatrix
+		int bitMapWidth=binaryMatrix.getWidth();
+		int bitMapHeight=binaryMatrix.getHeight();
+
+		final int WHITE = 0xFFFFFFFF;
+		final int BLACK = 0xFF000000;
+
+		int[] pixels = new int[bitMapWidth * bitMapHeight];
+		for (int y = 0; y < bitMapHeight; y++) {
+			int offset = y * bitMapWidth;
+			for (int x = 0; x < bitMapWidth; x++) {
+				pixels[offset + x] = binaryMatrix.get(x, y) ? WHITE : BLACK;
 			}
 		}
+		grayMap.setPixels(pixels,0,binaryMatrix.getWidth(),0,0,binaryMatrix.getWidth(),binaryMatrix.getHeight());
 
 		times[1]=System.currentTimeMillis();
-		Log.w("before rotate ",""+bitsBool.length+"|"+bitsBool[0].length);
+		Log.w("before rotate ",""+bitMapWidth+"|"+bitMapHeight);
 
+
+		int[][] changePixelCenter  = new int[4][2];
+		initialTourPixel(changePixelCenter);
 		//find theta, with finding nearest points and extend, first find points' x and y
-		for (int j = 0; j < grayMap.getWidth(); j++) {
-			for (int i = 0; i < grayMap.getHeight(); i++) {
-				if(whetherChecked[i][j]){
-					lineChange=true;
-					alreadyOne=true;
-				}else
-				if(bitsBool[i][j]){
+		for (int j = 0; j < bitMapWidth; j++) {
+			for (int i = 0; i < bitMapHeight; i++) {
+				if(!whetherChecked[i][j]&& (0xF&pixels[(bitMapHeight-1-i) * bitMapWidth+j])!=0){
 
 					int originX=j;
 					int originY=i;
@@ -524,61 +521,16 @@ public class testdecode extends Activity implements Runnable
 					int xs=j,xe=j,ys=i,ye=i;
 
 					while(true){
-						if(lastMove==0){
-							if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
-								changeY--;
-								lastMove = 3;
-							}else if((changeX+1<grayMap.getWidth())&&!whetherChecked[changeY][changeX+1]&&bitsBool[changeY][changeX+1]){
-								changeX++;
-								lastMove = 0;
-							}else if((changeY+1<grayMap.getHeight())&&!whetherChecked[changeY+1][changeX]&&bitsBool[changeY+1][changeX]){
-								changeY++;
-								lastMove = 1;
-							}else if((changeX-1>-1)&&!whetherChecked[changeY][changeX-1]&&bitsBool[changeY][changeX-1]){
-								changeX--;
-								lastMove = 2;
-							}
-						}else if(lastMove==1){
-							if((changeX+1<grayMap.getWidth())&&!whetherChecked[changeY][changeX+1]&&bitsBool[changeY][changeX+1]){
-								changeX++;
-								lastMove = 0;
-							}else if((changeY+1<grayMap.getHeight())&&!whetherChecked[changeY+1][changeX]&&bitsBool[changeY+1][changeX]){
-								changeY++;
-								lastMove = 1;
-							}else if((changeX-1>-1)&&!whetherChecked[changeY][changeX-1]&&bitsBool[changeY][changeX-1]){
-								changeX--;
-								lastMove = 2;
-							}else if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
-								changeY--;
-								lastMove = 3;
-							}
-						}else if(lastMove==2){
-							if((changeY+1<grayMap.getHeight())&&!whetherChecked[changeY+1][changeX]&&bitsBool[changeY+1][changeX]){
-								changeY++;
-								lastMove = 1;
-							}else if((changeX-1>-1)&&!whetherChecked[changeY][changeX-1]&&bitsBool[changeY][changeX-1]){
-								changeX--;
-								lastMove = 2;
-							}else if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
-								changeY--;
-								lastMove = 3;
-							}else if((changeX+1<grayMap.getWidth())&&!whetherChecked[changeY][changeX+1]&&bitsBool[changeY][changeX+1]){
-								changeX++;
-								lastMove = 0;
-							}
-						}else if(lastMove==3){
-							if((changeX-1>-1)&&!whetherChecked[changeY][changeX-1]&&bitsBool[changeY][changeX-1]){
-								changeX--;
-								lastMove = 2;
-							}else if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
-								changeY--;
-								lastMove = 3;
-							}else if((changeX+1<grayMap.getWidth())&&!whetherChecked[changeY][changeX+1]&&bitsBool[changeY][changeX+1]){
-								changeX++;
-								lastMove = 0;
-							}else if((changeY+1<grayMap.getHeight())&&!whetherChecked[changeY+1][changeX]&&bitsBool[changeY+1][changeX]){
-								changeY++;
-								lastMove = 1;
+						for(int k=0;k<4;k++){
+							int tempMoveDirection=(lastMove+k+3)%4;
+							int tempX=changeX+changePixelCenter[tempMoveDirection][0];
+							int tempY=changeY+changePixelCenter[tempMoveDirection][1];
+
+							if(tempX>-1&&tempY>-1&&tempX<bitMapWidth&&tempY<bitMapHeight&&!whetherChecked[tempY][tempX]&&(0xF&pixels[(bitMapHeight-1-tempY) * bitMapWidth+tempX])!=0){
+								changeX=tempX;
+								changeY=tempY;
+								lastMove=tempMoveDirection;
+								break;
 							}
 						}
 
@@ -610,7 +562,6 @@ public class testdecode extends Activity implements Runnable
 					pointArrayList.add(new Point(centX,centY));
 				}
 			}
-
 		}
 
 		if(pointArrayList.size()<49){
@@ -687,40 +638,25 @@ public class testdecode extends Activity implements Runnable
 		times[4]=System.currentTimeMillis();
 
 		whetherChecked=new boolean[grayMap.getHeight()][grayMap.getWidth()];
-		bitsBool=new boolean[grayMap.getHeight()][grayMap.getWidth()];
-		Log.w("after rotate ",""+bitsBool.length+"|"+bitsBool[0].length);
+		bitMapWidth=grayMap.getWidth();
+		bitMapHeight=grayMap.getHeight();
+		Log.w("after rotate ",""+grayMap.getWidth()+"|"+grayMap.getHeight());
 
 		//now start finding points after rotate
-		//how new bitmap get into old width and height?
-		for(int i=0;i<grayMap.getWidth();i++){
-//			String str="";
-			for(int j=0;j<grayMap.getHeight();j++){
-				//can use getPixels to optimaize
-				int temp=grayMap.getPixel(i,j);
-				int transTemp=(temp&0xff);
-				if(transTemp==0) {
-//					str = "_"+str;
-					bitsBool[grayMap.getHeight()-1-j][i] = false;
-				}
-				else {
-//					str = "*"+str;
-					bitsBool[grayMap.getHeight()-1-j][i] = true;
-				}
-			}
-//			Log.w("poi",str);
-		}
-
+		//This one can be deleted and use getpixels of bitmap
+		pixels=new int[grayMap.getWidth()*grayMap.getHeight()];
+		grayMap.getPixels(pixels,0,bitMapWidth,0,0,bitMapWidth,bitMapHeight);
 		times[5]=System.currentTimeMillis();
 
 		boolean firstRound=true;
 		double interval=0.0;
-		for (int j = 0; j < grayMap.getWidth(); j++) {
-			for (int i = 0; i < grayMap.getHeight(); i++) {
+		for (int j = 0; j < bitMapWidth; j++) {
+			for (int i = 0; i < bitMapHeight; i++) {
 				if(whetherChecked[i][j]){
 					lineChange=true;
 					alreadyOne=true;
 				}else
-				if(bitsBool[i][j]){
+				if((0xF&pixels[(bitMapHeight-1-i) * bitMapWidth+j])!=0){
 
 					int originX=j;
 					int originY=i;
@@ -733,61 +669,16 @@ public class testdecode extends Activity implements Runnable
 					int xs=j,xe=j,ys=i,ye=i;
 
 					while(true){
-						if(lastMove==0){
-							if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
-								changeY--;
-								lastMove = 3;
-							}else if((changeX+1<grayMap.getWidth())&&!whetherChecked[changeY][changeX+1]&&bitsBool[changeY][changeX+1]){
-								changeX++;
-								lastMove = 0;
-							}else if((changeY+1<grayMap.getHeight())&&!whetherChecked[changeY+1][changeX]&&bitsBool[changeY+1][changeX]){
-								changeY++;
-								lastMove = 1;
-							}else if((changeX-1>-1)&&!whetherChecked[changeY][changeX-1]&&bitsBool[changeY][changeX-1]){
-								changeX--;
-								lastMove = 2;
-							}
-						}else if(lastMove==1){
-							if((changeX+1<grayMap.getWidth())&&!whetherChecked[changeY][changeX+1]&&bitsBool[changeY][changeX+1]){
-								changeX++;
-								lastMove = 0;
-							}else if((changeY+1<grayMap.getHeight())&&!whetherChecked[changeY+1][changeX]&&bitsBool[changeY+1][changeX]){
-								changeY++;
-								lastMove = 1;
-							}else if((changeX-1>-1)&&!whetherChecked[changeY][changeX-1]&&bitsBool[changeY][changeX-1]){
-								changeX--;
-								lastMove = 2;
-							}else if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
-								changeY--;
-								lastMove = 3;
-							}
-						}else if(lastMove==2){
-							if((changeY+1<grayMap.getHeight())&&!whetherChecked[changeY+1][changeX]&&bitsBool[changeY+1][changeX]){
-								changeY++;
-								lastMove = 1;
-							}else if((changeX-1>-1)&&!whetherChecked[changeY][changeX-1]&&bitsBool[changeY][changeX-1]){
-								changeX--;
-								lastMove = 2;
-							}else if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
-								changeY--;
-								lastMove = 3;
-							}else if((changeX+1<grayMap.getWidth())&&!whetherChecked[changeY][changeX+1]&&bitsBool[changeY][changeX+1]){
-								changeX++;
-								lastMove = 0;
-							}
-						}else if(lastMove==3){
-							if((changeX-1>-1)&&!whetherChecked[changeY][changeX-1]&&bitsBool[changeY][changeX-1]){
-								changeX--;
-								lastMove = 2;
-							}else if((changeY-1>-1)&&!whetherChecked[changeY-1][changeX]&&bitsBool[changeY-1][changeX]){
-								changeY--;
-								lastMove = 3;
-							}else if((changeX+1<grayMap.getWidth())&&!whetherChecked[changeY][changeX+1]&&bitsBool[changeY][changeX+1]){
-								changeX++;
-								lastMove = 0;
-							}else if((changeY+1<grayMap.getHeight())&&!whetherChecked[changeY+1][changeX]&&bitsBool[changeY+1][changeX]){
-								changeY++;
-								lastMove = 1;
+						for(int k=0;k<4;k++){
+							int tempMoveDirection=(lastMove+k+3)%4;
+							int tempX=changeX+changePixelCenter[tempMoveDirection][0];
+							int tempY=changeY+changePixelCenter[tempMoveDirection][1];
+
+							if(tempX>-1&&tempY>-1&&tempX<bitMapWidth&&tempY<bitMapHeight&&!whetherChecked[tempY][tempX]&&(0xF&pixels[(bitMapHeight-1-tempY) * bitMapWidth+tempX])!=0){
+								changeX=tempX;
+								changeY=tempY;
+								lastMove=tempMoveDirection;
+								break;
 							}
 						}
 
@@ -808,8 +699,6 @@ public class testdecode extends Activity implements Runnable
 					}
 
 
-
-//					Log.w("loc","here|"+xs+"|"+xe+"|"+ys+"|"+ye);
 					for(int setI=ys;setI<=ye;setI++){
 						for(int setJ=xs;setJ<=xe;setJ++){
 							whetherChecked[setI][setJ] = true;
@@ -847,13 +736,6 @@ public class testdecode extends Activity implements Runnable
 									points[indexI][m][1] = centY;
 								}else if(m!=0){
 									Log.w("not proper points:",""+centX+"|"+centY);
-//									if(indexI>0&&points[indexI-1][m][0]==0f&&points[indexI-1][m][1]==0f){
-//										points[indexI-1][m][0] = centX;
-//										points[indexI-1][m][1] = centY;
-//									}else if(indexI<19&&points[indexI+1][m][0]==0f&&points[indexI+1][m][1]==0f){
-//										points[indexI+1][m][0] = centX;
-//										points[indexI+1][m][1] = centY;
-//									}
 								}
 
 								break;
@@ -909,17 +791,6 @@ public class testdecode extends Activity implements Runnable
 			lineChange=false;
 
 		}
-		//no use any more since points are already assign to their positions
-//		sortPoints(points);
-
-//		for(int i=0;i<20;i++){
-//			String str="";
-//			for(int j=0;j<20;j++){
-//				str+=formatString(""+(int)points[i][j][0],3);
-//				str+=formatString("|"+(int)points[i][j][1],7);
-//			}
-//			Log.w("points:",str);
-//		}
 
 		times[6]=System.currentTimeMillis();
 		//add perspective transform, 400 is the possible points in the picture, can vary for different phones
@@ -975,16 +846,6 @@ public class testdecode extends Activity implements Runnable
 			}
 		}
 
-//		Log.w("","------------------------------------------------------------------------------");
-//		for(int i=0;i<20;i++){
-//			String str="";
-//			for(int j=0;j<20;j++){
-//				str+=formatString(""+points[i][j][0],5);
-//				str+=formatString("|"+points[i][j][1],6);
-//				str+=";";
-//			}
-//			Log.w("points:",str);
-//		}
 		String charResult = "";
 		String retString="";
 		for(int i=0;i<10;i++){
@@ -1110,11 +971,11 @@ public class testdecode extends Activity implements Runnable
 
 			}
 			retString+="\n";
-			Log.w("",charResult);charResult="";
+			Log.w("p:",charResult);charResult="";
 		}
 
 		times[7]=System.currentTimeMillis();
-		for(int i=0;i<8;i++){
+		for(int i=0;i<10;i++){
 			System.out.println("time:"+times[i]);
 		}
 
@@ -1183,5 +1044,38 @@ public class testdecode extends Activity implements Runnable
 			}
 		}
 		return -1;
+	}
+
+	private static Bitmap bitMatrixToBitmap(BitMatrix matrix) {
+		final int WHITE = 0xFFFFFFFF;
+		final int BLACK = 0xFF000000;
+
+		int width = matrix.getWidth();
+		int height = matrix.getHeight();
+		int[] pixels = new int[width * height];
+		for (int y = 0; y < height; y++) {
+			int offset = y * width;
+			for (int x = 0; x < width; x++) {
+				pixels[offset + x] = matrix.get(x, y) ? WHITE : BLACK;
+			}
+		}
+		return createBitmap(width, height, pixels);
+	}
+
+	private static Bitmap createBitmap(int width, int height, int[] pixels) {
+		Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+		bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
+		return bitmap;
+	}
+
+	static void initialTourPixel(int[][] changePixelCenter){
+		changePixelCenter[0][0]=1;
+		changePixelCenter[0][1]=0;
+		changePixelCenter[1][0]=0;
+		changePixelCenter[1][1]=1;
+		changePixelCenter[2][0]=-1;
+		changePixelCenter[2][1]=0;
+		changePixelCenter[3][0]=0;
+		changePixelCenter[3][1]=-1;
 	}
 }
