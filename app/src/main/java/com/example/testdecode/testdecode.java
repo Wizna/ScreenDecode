@@ -556,8 +556,8 @@ public class testdecode extends Activity implements Runnable
 						}
 					}
 
-					float centX = (xs+xe)/2;
-					float centY = (ys+ye)/2;
+					float centX = ((float)xs+xe)/2;
+					float centY = ((float)ys+ye)/2;
 
 					pointArrayList.add(new Point(centX,centY));
 				}
@@ -603,6 +603,7 @@ public class testdecode extends Activity implements Runnable
 				double disPair = pointArrayList.get(m+1).distance + pointArrayList.get(n + 1).distance;
 				double ratePair = (pointArrayList.get(m+1).distance / pointArrayList.get(n + 1).distance);
 				Point[] possiblePoints = new Point[2];
+				Log.w("rate:",""+ratePair+"|"+Math.hypot((fourPoints[m][1] - fourPoints[n][1]), (fourPoints[m][0] - fourPoints[n][0])) / disPair);
 				if (1.05263 > ratePair && ratePair > 0.95 && Math.hypot((fourPoints[m][1] - fourPoints[n][1]), (fourPoints[m][0] - fourPoints[n][0])) / disPair > 0.95) {
 					possiblePoints[0] = new Point((2 * pointArrayList.get(m+1).centX - midPoint.centX), (2 * pointArrayList.get(m+1).centY - midPoint.centY));
 					possiblePoints[1] = new Point((2 * pointArrayList.get(n+1).centX - midPoint.centX), (2 * pointArrayList.get(n+1).centY - midPoint.centY));
@@ -705,8 +706,8 @@ public class testdecode extends Activity implements Runnable
 						}
 					}
 
-					float centX = (xs+xe)/2;
-					float centY = (ys+ye)/2;
+					float centX = ((float)xs+xe)/2;
+					float centY = ((float)ys+ye)/2;
 
 					//remove spots
 					if(Math.abs(xe-xs)>=2||Math.abs(ye-ys)>=2)
@@ -814,8 +815,7 @@ public class testdecode extends Activity implements Runnable
 			double disStoT=Math.hypot((points[6][foundStartPoint+i+1][0]-points[6][foundStartPoint+i+2][0]),(points[6][foundStartPoint+i+1][1]-points[6][foundStartPoint+i+2][1]));
 			double disFtoT=Math.hypot((points[6][foundStartPoint+i][0]-points[6][foundStartPoint+i+2][0]),(points[6][foundStartPoint+i][1]-points[6][foundStartPoint+i+2][1]));
 			double tempRate=disFtoS/disStoT;
-			if(1.05263>tempRate&&tempRate>0.95&&(disFtoT/(disFtoS+disStoT))>0.95){
-			}else
+			if(1.05263<tempRate||tempRate<0.95||(disFtoT/(disFtoS+disStoT))<0.95)
 				return "second standard line failed to be straight segments";
 
 		}
