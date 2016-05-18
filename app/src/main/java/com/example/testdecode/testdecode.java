@@ -603,7 +603,7 @@ public class testdecode extends Activity implements Runnable
 				double disPair = pointArrayList.get(m+1).distance + pointArrayList.get(n + 1).distance;
 				double ratePair = (pointArrayList.get(m+1).distance / pointArrayList.get(n + 1).distance);
 				Point[] possiblePoints = new Point[2];
-				Log.w("rate:",""+ratePair+"|"+Math.hypot((fourPoints[m][1] - fourPoints[n][1]), (fourPoints[m][0] - fourPoints[n][0])) / disPair);
+//				Log.w("rate:",""+ratePair+"|"+Math.hypot((fourPoints[m][1] - fourPoints[n][1]), (fourPoints[m][0] - fourPoints[n][0])) / disPair);
 				if (1.05263 > ratePair && ratePair > 0.95 && Math.hypot((fourPoints[m][1] - fourPoints[n][1]), (fourPoints[m][0] - fourPoints[n][0])) / disPair > 0.95) {
 					possiblePoints[0] = new Point((2 * pointArrayList.get(m+1).centX - midPoint.centX), (2 * pointArrayList.get(m+1).centY - midPoint.centY));
 					possiblePoints[1] = new Point((2 * pointArrayList.get(n+1).centX - midPoint.centX), (2 * pointArrayList.get(n+1).centY - midPoint.centY));
@@ -1032,40 +1032,18 @@ public class testdecode extends Activity implements Runnable
 				pointsList.get(j).setDistanceTo(possiblePoints[0]);
 			}
 			Collections.sort(pointsList);
-			System.out.println("nearest1:"+pointsList.get(0).distance);
+//			System.out.println("nearest1:"+pointsList.get(0).distance);
 			if(pointsList.get(0).distance<2) {
 				for(int j=0;j<pointsList.size();j++){
 					pointsList.get(j).setDistanceTo(possiblePoints[1]);
 				}
 				Collections.sort(pointsList);
-				System.out.println("nearest2:" + pointsList.get(0).distance);
+//				System.out.println("nearest2:" + pointsList.get(0).distance);
 				if(pointsList.get(0).distance<2)
 					return 0;
 			}
 		}
 		return -1;
-	}
-
-	private static Bitmap bitMatrixToBitmap(BitMatrix matrix) {
-		final int WHITE = 0xFFFFFFFF;
-		final int BLACK = 0xFF000000;
-
-		int width = matrix.getWidth();
-		int height = matrix.getHeight();
-		int[] pixels = new int[width * height];
-		for (int y = 0; y < height; y++) {
-			int offset = y * width;
-			for (int x = 0; x < width; x++) {
-				pixels[offset + x] = matrix.get(x, y) ? WHITE : BLACK;
-			}
-		}
-		return createBitmap(width, height, pixels);
-	}
-
-	private static Bitmap createBitmap(int width, int height, int[] pixels) {
-		Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-		bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
-		return bitmap;
 	}
 
 	static void initialTourPixel(int[][] changePixelCenter){
