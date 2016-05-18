@@ -57,12 +57,12 @@ public class ScanResult extends Activity  implements OnClickListener
 		//monospace display
 		txtR.setTextScaleX(1.5f);
 
-		txtR.setTextSize(20);
+		txtR.setTextSize(10);
 
 		txtR.setTypeface(Typeface.MONOSPACE);
 		txtR2.setTextScaleX(1.5f);
 
-		txtR2.setTextSize(20);
+		txtR2.setTextSize(10);
 
 		txtR2.setTypeface(Typeface.MONOSPACE);
 /*		btnCopy=(Button)findViewById(R.id.btnCopy);
