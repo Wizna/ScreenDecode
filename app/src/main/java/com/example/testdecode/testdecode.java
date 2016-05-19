@@ -1402,50 +1402,71 @@ public class testdecode extends Activity implements Runnable
 				}
 
 				double shreshhold=3.17;//14.8 is from experience
-				if(points[i][j][0]>expectX+shreshhold/2){
-					x=-1;
-				}else if(points[i][j][0]<expectX-shreshhold/2){
-					x=-2;
-				}
+//				if(points[i][j][0]>expectX+shreshhold/2){
+//					x=-1;
+//				}else if(points[i][j][0]<expectX-shreshhold/2){
+//					x=-2;
+//				}
+//
+//				if(points[i][j][1]<expectY-shreshhold){
+//					y=-1;
+//				}else if(points[i][j][1]>expectY+shreshhold){
+//					y=-2;
+//				}
+//
+//				if(x==0){
+//					if(y==0){
+//						charResult+="0";
+//						retString+="0";
+//					}else if(y==-1){
+//						charResult+="1";
+//						retString+="1";
+//					}else{
+//						charResult+="2";
+//						retString+="2";
+//					}
+//				}else if(x==-1){
+//					if(y==0){
+//						charResult+="3";
+//						retString+="3";
+//					}else if(y==-1){
+//						charResult+="4";
+//						retString+="4";
+//					}else{
+//						charResult+="5";
+//						retString+="5";
+//					}
+//				}else{
+//					if(y==0){
+//						charResult+="6";
+//						retString+="6";
+//					}else if(y==-1){
+//						charResult+="7";
+//						retString+="7";
+//					}else{
+//						charResult+="8";
+//						retString+="8";
+//					}
+//				}
 
-				if(points[i][j][1]<expectY-shreshhold){
-					y=-1;
-				}else if(points[i][j][1]>expectY+shreshhold){
-					y=-2;
-				}
-
-				if(x==0){
-					if(y==0){
+				if((points[i][j][0]>expectX+shreshhold/2)||(points[i][j][0]<expectX-shreshhold/2)){
+					if(points[i][j][1]<expectY){
 						charResult+="0";
 						retString+="0";
-					}else if(y==-1){
+					}else{
 						charResult+="1";
 						retString+="1";
-					}else{
-						charResult+="2";
-						retString+="2";
-					}
-				}else if(x==-1){
-					if(y==0){
-						charResult+="3";
-						retString+="3";
-					}else if(y==-1){
-						charResult+="4";
-						retString+="4";
-					}else{
-						charResult+="5";
-						retString+="5";
 					}
 				}else{
-					if(y==0){
-						charResult+="6";
-						retString+="6";
-					}else if(y==-1){
-						charResult+="7";
-						retString+="7";
+					if(points[i][j][1]==expectY){
+						charResult+="M";
+						retString+="M";
+					}else if(points[i][j][1]<expectY){
+						charResult+="a";
+						retString+="a";
 					}else{
-						charResult+="8";
-						retString+="8";
+						charResult+="b";
+						retString+="b";
 					}
 				}
 
@@ -1459,18 +1480,23 @@ public class testdecode extends Activity implements Runnable
 			System.out.println("time:"+times[i]);
 		}
 
-		int countTwo = retString.length() - retString.replace("2", "").length();
-		int countOne = retString.length() - retString.replace("1", "").length();
 		String findTwoOnePattern="";
 		for(int i=0;i<19;i++){
 			for(int j=0;j<19;j++){
 				findTwoOnePattern+=retString.charAt(j*20+i);
 			}
 		}
-		if( findTwoOnePattern.contains("01212121")||findTwoOnePattern.contains("12121210")){
-			retString=retString.replace("7", "a").replace("1", "b").replace("4", "c").replace("3", "d")
-					.replace("5", "7").replace("2", "1").replace("8", "4").replace("6", "3")
-					.replace("a", "5").replace("b", "2").replace("c", "8").replace("d", "6");
+//		if( findTwoOnePattern.contains("01212121")||findTwoOnePattern.contains("12121210")){
+//			retString=retString.replace("7", "a").replace("1", "b").replace("4", "c").replace("3", "d")
+//					.replace("5", "7").replace("2", "1").replace("8", "4").replace("6", "3")
+//					.replace("a", "5").replace("b", "2").replace("c", "8").replace("d", "6");
+//
+//			return new StringBuilder(retString).reverse().toString().substring(1);
+//		}
+		if( findTwoOnePattern.contains("Mbabab")||findTwoOnePattern.contains("bababM")){
+			retString=retString.replace("1", "q").replace("a", "e")
+					.replace("0", "1").replace("b", "a")
+					.replace("q", "0").replace("e", "b");
 
 			return new StringBuilder(retString).reverse().toString().substring(1);
 		}
