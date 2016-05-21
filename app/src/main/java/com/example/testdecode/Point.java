@@ -3,7 +3,7 @@ package com.example.testdecode;
 /**
  * Created by Ruiming Huang on 3/8/2016.
  */
-public class Point implements Comparable<Point>{
+public class Point implements Comparable<Point> {
     double centX;
     double centY;
 
@@ -30,14 +30,14 @@ public class Point implements Comparable<Point>{
         this.centY = centY;
     }
 
-    public void setDistanceTo(Point pb){
-        this.distance=Math.sqrt((pb.centX-this.centX)*(pb.centX-this.centX)+(pb.centY-this.centY)*(pb.centY-this.centY));
+    public void setDistanceTo(Point pb) {
+        this.distance = Math.sqrt((pb.centX - this.centX) * (pb.centX - this.centX) + (pb.centY - this.centY) * (pb.centY - this.centY));
     }
 
-    public int compareTo(Point pb){
-        if(this.distance<pb.distance)
+    public int compareTo(Point pb) {
+        if (this.distance < pb.distance)
             return -1;
-        else if(this.distance==pb.distance)
+        else if (this.distance == pb.distance)
             return 0;
         else
             return 1;
