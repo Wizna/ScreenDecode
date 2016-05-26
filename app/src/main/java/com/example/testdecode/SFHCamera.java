@@ -1,5 +1,6 @@
 package com.example.testdecode;
 
+import android.graphics.ImageFormat;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
@@ -40,7 +41,7 @@ public class SFHCamera implements SurfaceHolder.Callback {
         if (android.os.Build.MODEL.equals("HUAWEI T8300")) {
             createCamera(PixelFormat.YCbCr_422_SP);
         } else {
-            createCamera(PixelFormat.YCbCr_420_SP);
+            createCamera(ImageFormat.NV21);
         }
 
     }

@@ -6,11 +6,20 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicYuvToRGB;
+import android.renderscript.Type;
 import android.support.v7.app.AlertDialog;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -22,6 +31,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.google.zxing.Android.PlanarYUVLuminanceSource;
+import com.google.zxing.Android.RGBLuminanceSource;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.NotFoundException;
 import com.google.zxing.common.BitMatrix;
@@ -39,7 +49,8 @@ public class testdecode extends Activity implements Runnable {
     /**
      * Called when the activity is first created.
      */
-//	boolean whetherCatch=false;
+    static final int[][] config = {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}};
+    //	boolean whetherCatch=false;
     private final String PREFERENCES_NAME = "decodesetting";
 
     private SurfaceView sfvCamera;
@@ -72,7 +83,7 @@ public class testdecode extends Activity implements Runnable {
     AudioManager audioManager;
 
     byte[] myYUV;
-    long retNumber = 0;
+//    long retNumber = 0;
     Bitmap mBitmap;
     PlanarYUVLuminanceSource source;
     byte[] tempData;
@@ -194,10 +205,10 @@ public class testdecode extends Activity implements Runnable {
                             tempData = data;
                             myDecodThread.start();
                         } else if (myDecodThread.getState().equals(Thread.State.TERMINATED)) {
-                            if (retNumber == 0 || retNumber == -1) {
+//                            if (retNumber == 0 || retNumber == -1) {
                                 tempData = data;
                                 myDecodThread.run();
-                            }
+//                            }
                         }
 
                         if (flag_IsGetImg) {
@@ -307,7 +318,7 @@ public class testdecode extends Activity implements Runnable {
     protected void onRestart() {
         Log.i("*", "onRestart");
         super.onRestart();
-        retNumber = 0;
+//        retNumber = 0;
         MyApplication mApp = (MyApplication) getApplication();
         if (mApp.isExit()) {
             closeCamera();
@@ -351,19 +362,71 @@ public class testdecode extends Activity implements Runnable {
         public void run() {
 
             Log.i("*", "DecodeThread");
+
+            //
+//            RenderScript rs;
+//            ScriptIntrinsicYuvToRGB yuvToRgbIntrinsic;
+//            Type.Builder yuvType, rgbaType;
+//            Allocation in, out;
+//            rs = RenderScript.create(testdecode.this);
+//            yuvToRgbIntrinsic = ScriptIntrinsicYuvToRGB.create(rs, Element.U8_4(rs));
+////            if (yuvType == null)
+////            {
+//                yuvType = new Type.Builder(rs, Element.U8(rs)).setX(tempData.length);
+//                in = Allocation.createTyped(rs, yuvType.create(), Allocation.USAGE_SCRIPT);
+//
+//                rgbaType = new Type.Builder(rs, Element.RGBA_8888(rs)).setX(502).setY(548);
+//                out = Allocation.createTyped(rs, rgbaType.create(), Allocation.USAGE_SCRIPT);
+////            }
+//
+//            in.copyFrom(tempData);
+//
+//            yuvToRgbIntrinsic.setInput(in);
+//            yuvToRgbIntrinsic.forEach(out);
+//
+//            Bitmap bitmap = Bitmap.createBitmap(502, 548, Bitmap.Config.ARGB_8888);
+//            out.copyTo(bitmap);
+            //
+//            YuvImage yuvImage = new YuvImage(tempData, ImageFormat.NV21, 548, 502, null);
+//            Log.w("null?",""+(yuvImage==null));
+//            ByteArrayOutputStream os = new ByteArrayOutputStream();
+//            yuvImage.compressToJpeg(new Rect(0, 0, 502, 548), 100, os);
+//            byte[] jpegByteArray = os.toByteArray();
+
+
+            //
+//            Bitmap bitmap = BitmapFactory.decodeByteArray(jpegByteArray , 0,  jpegByteArray.length);
+//            int width = bitmap.getWidth();
+//            int height = bitmap.getHeight();
+//            int[] pixels = new int[width * height];
+//            bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+            //
+
+//            for(int i = 0; i < pixels.length; i++)
+//            {
+//                Log.w("color:",""+Integer.toHexString(pixels[i]));//+"|"+Integer.toHexString(Color.green(pixels[i]))+"|"
+//                +Integer.toHexString(Color.argb(Color.alpha(pixels[i]),0,Color.green(pixels[i]),0)));
+//                pixels[i]=Color.argb(Color.alpha(pixels[i]),0,Color.green(pixels[i]),0); ;
+//            }
+
+            //
+//            RGBLuminanceSource source2 = new RGBLuminanceSource(dstWidth, dstHeight,
+//                    pixels );
             source = new PlanarYUVLuminanceSource(
                     tempData, width, height, dstLeft, dstTop, dstWidth, dstHeight);
-            BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-
+            BinaryBitmap bitmap2 = new BinaryBitmap(new HybridBinarizer(source));
+            Log.w("width,height1:",""+width+"|"+height);
+//            mBitmap=Bitmap.createBitmap(548,
+//                    502, Bitmap.Config.ARGB_8888);
             mBitmap = source.renderCroppedGreyscaleBitmap();
-            myYUV = source.getTheYUV();
+//            myYUV = source.getTheYUV();
 
-            retNumber = 0;
+//            retNumber = 0;
             String retString = "";
 
             //now add my code to replace original decode process using .so
             try {
-                retString = decodeBitMap(bitmap, mBitmap);
+                retString = decodeBitMap(bitmap2, mBitmap);
 
             } catch (NotFoundException e) {
                 e.printStackTrace();
@@ -374,13 +437,13 @@ public class testdecode extends Activity implements Runnable {
             if (retString.length() > 5 && retString.contains("\n")) {
                 //now we get the net string and play the multimeida data, so we need not show the decode result activity
                 //we add these codes to get media data and play
-                String ret = String.valueOf(retNumber);
-                int num = 12 - ret.length();
-                if (num > 0) {
-                    for (int i = 0; i < num; i++) {
-                        ret = "0" + ret;
-                    }
-                }
+//                String ret = String.valueOf(retNumber);
+//                int num = 12 - ret.length();
+//                if (num > 0) {
+//                    for (int i = 0; i < num; i++) {
+//                        ret = "0" + ret;
+//                    }
+//                }
 
                 //add to avoid extra out of size
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -1486,7 +1549,7 @@ public class testdecode extends Activity implements Runnable {
         long[] times = new long[10];
         times[0] = System.currentTimeMillis();
 
-        boolean[][] whetherChecked = new boolean[grayMap.getHeight()][grayMap.getWidth()];
+        boolean[][] whetherChecked = new boolean[bitmap.getHeight()][bitmap.getWidth()];
         float[][][] points = new float[60][60][2];
         int indexI = 0;
         int indexJ = 0;
@@ -1506,13 +1569,20 @@ public class testdecode extends Activity implements Runnable {
         final int WHITE = 0xFFFFFFFF;
         final int BLACK = 0xFF000000;
 
+//        String tempStrRgb="";
         int[] pixels = new int[bitMapWidth * bitMapHeight];
         for (int y = 0; y < bitMapHeight; y++) {
             int offset = y * bitMapWidth;
             for (int x = 0; x < bitMapWidth; x++) {
                 pixels[offset + x] = binaryMatrix.get(x, y) ? WHITE : BLACK;
+//                tempStrRgb+=binaryMatrix.get(x, y) ?"*":"-";
             }
+//            Log.w("o:",tempStrRgb);
+//            tempStrRgb="";
         }
+//        if(true)
+//            return "000000000000\n";
+        Log.w("width,height2:",""+binaryMatrix.getWidth()+"|"+binaryMatrix.getHeight());
         grayMap.setPixels(pixels, 0, binaryMatrix.getWidth(), 0, 0, binaryMatrix.getWidth(), binaryMatrix.getHeight());
 
         times[1] = System.currentTimeMillis();
@@ -1607,32 +1677,8 @@ public class testdecode extends Activity implements Runnable {
 
             int m = 0, n = 0;
             for (int i = 0; i < 6; i++) {
-                switch (i) {
-                    case 0:
-                        m = 0;
-                        n = 1;
-                        break;
-                    case 1:
-                        m = 0;
-                        n = 2;
-                        break;
-                    case 2:
-                        m = 0;
-                        n = 3;
-                        break;
-                    case 3:
-                        m = 1;
-                        n = 2;
-                        break;
-                    case 4:
-                        m = 1;
-                        n = 3;
-                        break;
-                    case 5:
-                        m = 2;
-                        n = 3;
-                        break;
-                }
+                m = config[i][0];
+                n = config[i][1];
 
                 double disPair = pointArrayList.get(m + 1).distance + pointArrayList.get(n + 1).distance;
                 double ratePair = (pointArrayList.get(m + 1).distance / pointArrayList.get(n + 1).distance);
@@ -1843,6 +1889,7 @@ public class testdecode extends Activity implements Runnable {
                 foundStartPoint++;
         }
 
+        Log.w("start point:",""+foundStartPoint);
         if (foundStartPoint == 60 - 8) {
             return "-1";
         }
@@ -1901,8 +1948,8 @@ public class testdecode extends Activity implements Runnable {
 
         String charResult = "";
         String retString = "";
-        for (int i = 0; i < 34; i++) {
-            for (int j = 0; j < 34; j++) {
+        for (int i = 0; i < 8; i++) {
+            for (int j = foundStartPoint; j < foundStartPoint+8; j++) {
                 float expectX = (points[8][j][0] - points[0][j][0]) * i / 8 + points[0][j][0];
                 float expectY = (points[8][j][1] - points[0][j][1]) * i / 8 + points[0][j][1];
                 charResult = charResult + "(" + formatString(expectX + "", 5).substring(0, 5) + ";" + formatString(expectY + "", 5).substring(0, 5) + ")";
@@ -1955,20 +2002,33 @@ public class testdecode extends Activity implements Runnable {
         }
 
         String findTwoOnePattern = "";
-        for (int i = 0; i < 34; i++) {
-            for (int j = 0; j < 34; j++) {
-                findTwoOnePattern += retString.charAt(j * 35 + i);
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                findTwoOnePattern += retString.charAt(j * 9 + i);
             }
         }
+        int rollIndex=((findTwoOnePattern.indexOf("Mababa")==-1)?(7-(findTwoOnePattern.indexOf("Mbabab")/8)):(findTwoOnePattern.indexOf("Mababa")/8));
+        Log.w("index",""+findTwoOnePattern.indexOf("Mababa")+"|"+findTwoOnePattern.indexOf("Mbabab"));
         if (findTwoOnePattern.contains("Mbabab") || findTwoOnePattern.contains("bababM")) {
             retString = retString.replace("1", "q").replace("a", "e").replace("0", "w")
                     .replace("2", "1").replace("b", "a").replace("3", "0")
                     .replace("q", "2").replace("e", "b").replace("w", "3");
 
-            return new StringBuilder(retString).reverse().toString().substring(1);
+            retString=new StringBuilder(retString).reverse().toString().substring(1);
         }
 
+        Log.w("index",""+rollIndex);
 
+        String trimRetStr="";
+        for(int i=0;i<8;i++){
+            for(int j=0;j<8;j++){
+                trimRetStr+=retString.charAt(i*9+(j+rollIndex)%8);
+            }
+        }
+        Log.w("trimStr:",trimRetStr.replace("M","").replace("\n","").replace("a","").replace("b",""));
+        retString=retString.replace("M","");
+        if(retString.charAt(0)=='\n')
+            retString=retString.substring(1);
         return retString;
     }
 

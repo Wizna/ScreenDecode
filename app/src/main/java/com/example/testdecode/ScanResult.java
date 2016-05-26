@@ -24,7 +24,7 @@ public class ScanResult extends Activity implements OnClickListener {
     private TextView txtType;
     private TextView txtTime;
     private TextView txtR;
-    public TextView txtR2;
+//    public TextView txtR2;
     private Button btnBack;
     private Button btnCopy;
     private Button btnWebcheck;
@@ -42,7 +42,7 @@ public class ScanResult extends Activity implements OnClickListener {
         imgShow = (ImageView) findViewById(R.id.imgShow);
         txtType = (TextView) findViewById(R.id.txtType);
         txtR = (TextView) findViewById(R.id.txtRst);
-        txtR2 = (TextView) findViewById(R.id.txtRst2);
+//        txtR2 = (TextView) findViewById(R.id.txtRst2);
         txtTime = (TextView) findViewById(R.id.txtTime);
         btnBack = (Button) findViewById(R.id.btnBack);
         btnBack.setOnClickListener(this);
@@ -54,11 +54,11 @@ public class ScanResult extends Activity implements OnClickListener {
         txtR.setTextSize(11);
 
         txtR.setTypeface(Typeface.MONOSPACE);
-        txtR2.setTextScaleX(1.5f);
-
-        txtR2.setTextSize(11);
-
-        txtR2.setTypeface(Typeface.MONOSPACE);
+//        txtR2.setTextScaleX(1.5f);
+//
+//        txtR2.setTextSize(11);
+//
+//        txtR2.setTypeface(Typeface.MONOSPACE);
 /*		btnCopy=(Button)findViewById(R.id.btnCopy);
         btnCopy.setOnClickListener(this);
 		btnWebcheck=(Button)findViewById(R.id.btnWebcheck);
@@ -66,15 +66,15 @@ public class ScanResult extends Activity implements OnClickListener {
 		btnMsgcheck=(Button)findViewById(R.id.btnMsgcheck);
 		btnMsgcheck.setOnClickListener(this);*/
 
-        txtR2.setMovementMethod(ScrollingMovementMethod.getInstance());
+//        txtR2.setMovementMethod(ScrollingMovementMethod.getInstance());
 
         String ret = getIntent().getStringExtra("number");
-        int num = 12 - ret.length();
-        if (num > 0) {
-            for (int i = 0; i < num; i++) {
-                ret = "0" + ret;
-            }
-        }
+//        int num = 12 - ret.length();
+//        if (num > 0) {
+//            for (int i = 0; i < num; i++) {
+//                ret = "0" + ret;
+//            }
+//        }
         txtR.setText(ret);
 
         flag_DecodeMode = getIntent().getExtras().getInt("type");
@@ -90,9 +90,9 @@ public class ScanResult extends Activity implements OnClickListener {
 
         txtTime.setText("          " + getIntent().getStringExtra("time"));
 
-        if (getIntent().getExtras().getInt("flag") == 0) {
-            txtR2.setText(getIntent().getStringExtra("result").toString());
-        }
+//        if (getIntent().getExtras().getInt("flag") == 0) {
+//            txtR2.setText(getIntent().getStringExtra("result").toString());
+//        }
 /*		if(getIntent().getExtras().getInt("flag")==1)
 		{
 			Bitmap bmp=(Bitmap)getIntent().getExtras().get("bmp"); 
@@ -101,14 +101,14 @@ public class ScanResult extends Activity implements OnClickListener {
 			imgShow.setMaxWidth(100);
 			imgShow.setImageBitmap(bmp);
 		}*/
-        else {
+//        else {
             //add to avoid exceeding the extra size limit
             byte[] bytes = getIntent().getByteArrayExtra("bmp");
             Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
             //
 //			Bitmap bmp=(Bitmap)getIntent().getExtras().get("bmp");
             imgShow.setImageBitmap(bmp);
-        }
+//        }
     }
 
     @Override
