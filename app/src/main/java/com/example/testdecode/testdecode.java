@@ -2044,25 +2044,26 @@ public class testdecode extends Activity implements Runnable {
                 findTwoOnePattern += retString.charAt(j * 9 + i);
             }
         }
-        int rollIndex = ((findTwoOnePattern.indexOf("Mababa") == -1) ? (7 - (findTwoOnePattern.indexOf("Mbabab") / 8)) : (findTwoOnePattern.indexOf("Mababa") / 8));
-        Log.w("index", "" + findTwoOnePattern.indexOf("Mababa") + "|" + findTwoOnePattern.indexOf("Mbabab"));
-        if (findTwoOnePattern.contains("Mbabab") || findTwoOnePattern.contains("bababM")) {
-            retString = retString.replace("1", "q").replace("a", "e").replace("0", "w")
-                    .replace("2", "1").replace("b", "a").replace("3", "0")
-                    .replace("q", "2").replace("e", "b").replace("w", "3");
-
-            retString = new StringBuilder(retString).reverse().toString().substring(1);
-        }
-
-        Log.w("index", "" + rollIndex);
-
-        String trimRetStr = "";
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                trimRetStr += retString.charAt(i * 9 + (j + rollIndex) % 8);
-            }
-        }
-        Log.w("trimStr:", trimRetStr = trimRetStr.replace("M", "").replace("\n", "").replace("a", "").replace("b", ""));
+//
+//        int rollIndex = ((findTwoOnePattern.indexOf("Mababa") == -1) ? (7 - (findTwoOnePattern.indexOf("Mbabab") / 8)) : (findTwoOnePattern.indexOf("Mababa") / 8));
+//        Log.w("index", "" + findTwoOnePattern.indexOf("Mababa") + "|" + findTwoOnePattern.indexOf("Mbabab"));
+//        if (findTwoOnePattern.contains("Mbabab") || findTwoOnePattern.contains("bababM")) {
+//            retString = retString.replace("1", "q").replace("a", "e").replace("0", "w")
+//                    .replace("2", "1").replace("b", "a").replace("3", "0")
+//                    .replace("q", "2").replace("e", "b").replace("w", "3");
+//
+//            retString = new StringBuilder(retString).reverse().toString().substring(1);
+//        }
+//
+//        Log.w("index", "" + rollIndex);
+//
+//        String trimRetStr = "";
+//        for (int i = 0; i < 8; i++) {
+//            for (int j = 0; j < 8; j++) {
+//                trimRetStr += retString.charAt(i * 9 + (j + rollIndex) % 8);
+//            }
+//        }
+//        Log.w("trimStr:", trimRetStr = trimRetStr.replace("M", "").replace("\n", "").replace("a", "").replace("b", ""));
         //test rs coding
 //        int[] rscode = {3, 9, 6, 3, 8, 9, 10, 7,0,13,1,5};
 //        int[] rscode1 = {3, 9, 6, 3, 8, 3, 10, 7,0,13,1,5};
@@ -2078,32 +2079,41 @@ public class testdecode extends Activity implements Runnable {
 //        }
 //        Log.w("equal:",""+ Arrays.equals(rscode,rscode1));
         RSDecoder rs=new RSDecoder();
-        Log.w("jni: !!!",""+rs.addInt(5,5));
+//        Log.w("jni: !!!",""+rs.addInt(5,5));
 
 //        int[] input = {14, 12, 1, 2, 3, 9, 6, 3, 8, 9, 10, 7, 10, 6, 10, 13, 7, 10, 12, 1, 10, 1, 1, 9};
-        int[] input={
+        if(findTwoOnePattern.contains("Mb")||findTwoOnePattern.contains("bM"))
+            findTwoOnePattern=new StringBuilder(findTwoOnePattern).reverse().toString();
 
-                0, 0, 1, 2, 3 ,3, 2,
-                0, 3, 2, 0, 2 ,3, 1,
-                1, 2, 2, 0, 0, 1 ,1,
-                0, 1, 3, 1, 3, 3 ,0,
-                0, 2, 1, 1, 2, 1, 1,
-                0, 0, 0, 2, 1, 1, 0,
-                3, 0, 1, 2, 0, 2, 0
-        };
+        int findMA=findTwoOnePattern.indexOf("Ma");
+        findTwoOnePattern=findTwoOnePattern.substring(findMA)+findTwoOnePattern.substring(0,findMA);
+        findTwoOnePattern=findTwoOnePattern.replace("M", "").replace("a", "").replace("b", "");
+        Log.w("findtwoone:",findTwoOnePattern);
+        findTwoOnePattern.replace("*","1");
+        String tempFindTwoOne="";
+        for(int i=0;i<7;i++){
+            for(int j=0;j<7;j++){
+                tempFindTwoOne+=findTwoOnePattern.charAt(j*7+i);
+            }
+        }
+        findTwoOnePattern=tempFindTwoOne;
+        int[] input=new int[49];
+        for(int i=0;i<49;i++){
+            input[i]=Character.getNumericValue(findTwoOnePattern.charAt(i));
+        }
 
         int[] result=new int[16];
         int type=rs.decodeRS(input,result);
-
+        String rscode="";
         for(int i=0;i<16;i++){
-            Log.w("rs:",""+result[i]);
+            rscode+=result[i]+" ";
         }
-        Log.w("type:",""+type);
+        Log.w("rscode:",rscode);
         //
-        retString = retString.replace("M", "");
-        if (retString.charAt(0) == '\n')
-            retString = retString.substring(1);
-        return retString;
+//        retString = retString.replace("M", "");
+//        if (retString.charAt(0) == '\n')
+//            retString = retString.substring(1);
+        return findTwoOnePattern+"\n";
     }
 
     public static void sortPoints(float[][][] points) {
