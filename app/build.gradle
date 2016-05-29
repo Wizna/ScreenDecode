@@ -1,25 +1,35 @@
 apply plugin: 'com.android.application'
 
-android {
+android{
     compileSdkVersion 23
     buildToolsVersion "23.0.1"
-    defaultConfig {
+    defaultConfig{
         applicationId "com.example.testdecode"
         minSdkVersion 17
         targetSdkVersion 23
         multiDexEnabled true
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+
+        ndk {
+            moduleName "lb"
         }
     }
-    productFlavors {
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['jniLibs']
+        }
+    }
+    buildTypes{
+        release{
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),'proguard-rules.txt'
+        }
+    }
+    productFlavors{
     }
 }
 
-dependencies {
+dependencies{
     compile 'com.android.support:support-v4:23.0.1'
     compile files('libs/core.jar')
     compile files('libs/java-rt-jar-stubs-1.5.0.jar')

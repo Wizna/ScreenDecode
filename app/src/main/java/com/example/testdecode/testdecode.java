@@ -6,20 +6,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.media.AudioManager;
 import android.os.Bundle;
-import android.renderscript.Allocation;
-import android.renderscript.Element;
-import android.renderscript.RenderScript;
-import android.renderscript.ScriptIntrinsicYuvToRGB;
-import android.renderscript.Type;
 import android.support.v7.app.AlertDialog;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -31,12 +22,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.google.zxing.Android.PlanarYUVLuminanceSource;
-import com.google.zxing.Android.RGBLuminanceSource;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.NotFoundException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.common.PerspectiveTransform;
+import com.google.zxing.common.reedsolomon.ReedSolomonException;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.Date;
@@ -46,9 +37,8 @@ import java.util.regex.Pattern;
 
 
 public class testdecode extends Activity implements Runnable {
-    /**
-     * Called when the activity is first created.
-     */
+
+    //
     static final int[][] config = {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}};
     //	boolean whetherCatch=false;
     private final String PREFERENCES_NAME = "decodesetting";
@@ -83,7 +73,7 @@ public class testdecode extends Activity implements Runnable {
     AudioManager audioManager;
 
     byte[] myYUV;
-//    long retNumber = 0;
+    //    long retNumber = 0;
     Bitmap mBitmap;
     PlanarYUVLuminanceSource source;
     byte[] tempData;
@@ -206,8 +196,8 @@ public class testdecode extends Activity implements Runnable {
                             myDecodThread.start();
                         } else if (myDecodThread.getState().equals(Thread.State.TERMINATED)) {
 //                            if (retNumber == 0 || retNumber == -1) {
-                                tempData = data;
-                                myDecodThread.run();
+                            tempData = data;
+                            myDecodThread.run();
 //                            }
                         }
 
@@ -415,7 +405,7 @@ public class testdecode extends Activity implements Runnable {
             source = new PlanarYUVLuminanceSource(
                     tempData, width, height, dstLeft, dstTop, dstWidth, dstHeight);
             BinaryBitmap bitmap2 = new BinaryBitmap(new HybridBinarizer(source));
-            Log.w("width,height1:",""+width+"|"+height);
+            Log.w("width,height1:", "" + width + "|" + height);
 //            mBitmap=Bitmap.createBitmap(548,
 //                    502, Bitmap.Config.ARGB_8888);
             mBitmap = source.renderCroppedGreyscaleBitmap();
@@ -429,6 +419,8 @@ public class testdecode extends Activity implements Runnable {
                 retString = decodeBitMap(bitmap2, mBitmap);
 
             } catch (NotFoundException e) {
+                e.printStackTrace();
+            } catch (ReedSolomonException e) {
                 e.printStackTrace();
             }
 
@@ -1545,7 +1537,7 @@ public class testdecode extends Activity implements Runnable {
 
 
     //decode function for 7*7, with 1,0 coding
-    public String decodeBitMap(BinaryBitmap bitmap, Bitmap grayMap) throws NotFoundException {
+    public String decodeBitMap(BinaryBitmap bitmap, Bitmap grayMap) throws NotFoundException, ReedSolomonException {
         long[] times = new long[10];
         times[0] = System.currentTimeMillis();
 
@@ -1582,7 +1574,7 @@ public class testdecode extends Activity implements Runnable {
         }
 //        if(true)
 //            return "000000000000\n";
-        Log.w("width,height2:",""+binaryMatrix.getWidth()+"|"+binaryMatrix.getHeight());
+        Log.w("width,height2:", "" + binaryMatrix.getWidth() + "|" + binaryMatrix.getHeight());
         grayMap.setPixels(pixels, 0, binaryMatrix.getWidth(), 0, 0, binaryMatrix.getWidth(), binaryMatrix.getHeight());
 
         times[1] = System.currentTimeMillis();
@@ -1729,6 +1721,16 @@ public class testdecode extends Activity implements Runnable {
         grayMap.getPixels(pixels, 0, bitMapWidth, 0, 0, bitMapWidth, bitMapHeight);
         times[5] = System.currentTimeMillis();
 
+//        String tempStrRgb="";
+//        for (int y = 0; y < bitMapWidth; y++) {
+//            for (int x = 0; x < bitMapHeight; x++) {
+//                tempStrRgb+=(0xF & pixels[(bitMapHeight - 1 - x) * bitMapWidth + y]) != 0?"*":"-";
+//            }
+//            Log.w("o:",tempStrRgb);
+//            tempStrRgb="";
+//        }
+
+        pointArrayList.clear();
         boolean firstRound = true;
         double interval = 0;
         for (int j = 0; j < bitMapWidth; j++) {
@@ -1788,7 +1790,7 @@ public class testdecode extends Activity implements Runnable {
                     float centX = ((float) xs + xe) / 2;
                     float centY = ((float) ys + ye) / 2;
 
-                    Log.w("candid points:", " " + centX + "|" + centY);
+//                    Log.w("candid points:", " " + centX + "|" + centY);
 
                     //remove spots
                     if (Math.abs(xe - xs) < 2 && Math.abs(ye - ys) < 2) {
@@ -1799,6 +1801,9 @@ public class testdecode extends Activity implements Runnable {
                     if (firstRound || (centX - points[0][0][0] < 0.1 * interval)) {
                         points[indexI][indexJ][0] = centX;
                         points[indexI][indexJ][1] = centY;
+
+                        if (indexJ < 59)
+                            indexJ++;
                     } else
                         for (int m = 0; m < (60 - 1); m++) {
                             if (points[0][m + 1][1] == points[59][59][1] && (Math.abs(centY - points[0][m][1]) > 0.5 * interval)) {
@@ -1815,19 +1820,18 @@ public class testdecode extends Activity implements Runnable {
                                     indexI = (int) floorIndexI;
 
                                 if (indexI < 60 && ((points[indexI][m][0] == points[59][59][0] && points[indexI][m][1] == points[59][59][1])
-                                        || (m == 0 && centY > points[indexI][m][1]))) {
+                                        || (m == 0 && centY > points[indexI][m][1])) && indexI == 8) {
                                     points[indexI][m][0] = centX;
                                     points[indexI][m][1] = centY;
                                 } else {
-                                    Log.w("not proper points:", "" + centX + "|" + centY + "|" + indexI + "|" + points[indexI][m][0] + "|" + points[indexI][m][1]);
+                                    pointArrayList.add(new Point(centX, centY));
+//                                    Log.w("not proper points:", "" + centX + "|" + centY + "|" + indexI + "|" + points[indexI][m][0] + "|" + points[indexI][m][1]);
                                 }
 
                                 break;
                             }
                         }
 
-                    if (indexJ < 59)
-                        indexJ++;
 
                     lineChange = true;
                     alreadyOne = true;
@@ -1863,12 +1867,6 @@ public class testdecode extends Activity implements Runnable {
                     }
                 }
 
-                if (indexI < 59 && !firstRound) {
-
-                    indexI++;
-                    indexJ = 0;
-                }
-
                 alreadyOne = false;
             }
 
@@ -1878,8 +1876,10 @@ public class testdecode extends Activity implements Runnable {
 
         times[6] = System.currentTimeMillis();
         //add perspective transform, 400 is the possible points in the picture, can vary for different phones
-        float[] xValues = new float[3600];
-        float[] yValues = new float[3600];
+        float[] xValues = new float[120];
+        float[] yValues = new float[120];
+        float[] xArrayValues = new float[2000];
+        float[] yArrayValues = new float[2000];
 
         int foundStartPoint = 0;
         for (int i = 0; i < 60 - 8; i++) {
@@ -1889,7 +1889,7 @@ public class testdecode extends Activity implements Runnable {
                 foundStartPoint++;
         }
 
-        Log.w("start point:",""+foundStartPoint);
+        Log.w("start point:", "" + foundStartPoint);
         if (foundStartPoint == 60 - 8) {
             return "-1";
         }
@@ -1922,19 +1922,56 @@ public class testdecode extends Activity implements Runnable {
                 330, 50,
                 330, 330);
 
-        for (int i = 0; i < points.length; i++) {
-            for (int j = 0; j < points.length; j++) {
-                xValues[i * 60 + j] = points[i][j][0];
-                yValues[i * 60 + j] = points[i][j][1];
-            }
+        for (int j = 0; j < points.length; j++) {
+            xValues[j] = points[0][j][0];
+            yValues[j] = points[0][j][1];
+            xValues[60 + j] = points[8][j][0];
+            yValues[60 + j] = points[8][j][1];
+        }
+
+        for (int i = 0; i < pointArrayList.size(); i++) {
+            xArrayValues[i] = (float) pointArrayList.get(i).centX;
+            yArrayValues[i] = (float) pointArrayList.get(i).centY;
         }
 
         perspectiveTransform.transformPoints(xValues, yValues);
+        perspectiveTransform.transformPoints(xArrayValues, yArrayValues);
 
-        for (int i = 0; i < points.length; i++) {
-            for (int j = 0; j < points.length; j++) {
-                points[i][j][0] = xValues[i * 60 + j];
-                points[i][j][1] = yValues[i * 60 + j];
+        for (int j = 0; j < points.length; j++) {
+            points[0][j][0] = xValues[j];
+            points[0][j][1] = yValues[j];
+            points[8][j][0] = xValues[60 + j];
+            points[8][j][1] = yValues[60 + j];
+        }
+
+        interval = 35.0;
+        for (int i = 0; i < pointArrayList.size(); i++) {
+//            pointArrayList.set(i, new Point(xArrayValues[i], yArrayValues[i]));
+            //now add decision on where to place the points
+            for (int m = foundStartPoint; m < (60 - 1); m++) {
+                if (points[0][m + 1][1] == points[59][59][1] && (Math.abs(yArrayValues[i] - points[0][m][1]) > 0.5 * interval)) {
+//                                Log.w("exceded:", " not in column limit.");
+                    break;
+                }
+                if (Math.abs(yArrayValues[i] - points[0][m][1]) < Math.abs(yArrayValues[i] - points[0][m + 1][1]) && (Math.abs(yArrayValues[i] - points[0][m][1]) < 0.5 * interval)) {
+
+                    double tempIndexI = (xArrayValues[i] - points[0][m][0]) / interval;
+                    double floorIndexI = Math.floor(tempIndexI);
+                    if (tempIndexI - floorIndexI > 0.5)
+                        indexI = (int) floorIndexI + 1;
+                    else
+                        indexI = (int) floorIndexI;
+
+                    if (indexI < 60 && ((points[indexI][m][0] == points[59][59][0] && points[indexI][m][1] == points[59][59][1])
+                            || (m == 0 && yArrayValues[i] > points[indexI][m][1]))) {
+                        points[indexI][m][0] = xArrayValues[i];
+                        points[indexI][m][1] = yArrayValues[i];
+                    } else {
+                        Log.w("not proper points:", "" + xArrayValues[i] + "|" + yArrayValues[i] + "|" + tempIndexI + "|" + points[indexI][m][0] + "|" + points[indexI][m][1]);
+                    }
+
+                    break;
+                }
             }
         }
 
@@ -1949,7 +1986,7 @@ public class testdecode extends Activity implements Runnable {
         String charResult = "";
         String retString = "";
         for (int i = 0; i < 8; i++) {
-            for (int j = foundStartPoint; j < foundStartPoint+8; j++) {
+            for (int j = foundStartPoint; j < foundStartPoint + 8; j++) {
                 float expectX = (points[8][j][0] - points[0][j][0]) * i / 8 + points[0][j][0];
                 float expectY = (points[8][j][1] - points[0][j][1]) * i / 8 + points[0][j][1];
                 charResult = charResult + "(" + formatString(expectX + "", 5).substring(0, 5) + ";" + formatString(expectY + "", 5).substring(0, 5) + ")";
@@ -1959,7 +1996,7 @@ public class testdecode extends Activity implements Runnable {
                     continue;
                 }
 
-                double shreshhold = 3.75;//14.8 is from experience
+                double shreshhold = 3.88;//14.8 is from experience
 
                 if (points[i][j][0] < expectX - shreshhold / 2) {
                     if (points[i][j][1] < expectY) {
@@ -2007,28 +2044,65 @@ public class testdecode extends Activity implements Runnable {
                 findTwoOnePattern += retString.charAt(j * 9 + i);
             }
         }
-        int rollIndex=((findTwoOnePattern.indexOf("Mababa")==-1)?(7-(findTwoOnePattern.indexOf("Mbabab")/8)):(findTwoOnePattern.indexOf("Mababa")/8));
-        Log.w("index",""+findTwoOnePattern.indexOf("Mababa")+"|"+findTwoOnePattern.indexOf("Mbabab"));
+        int rollIndex = ((findTwoOnePattern.indexOf("Mababa") == -1) ? (7 - (findTwoOnePattern.indexOf("Mbabab") / 8)) : (findTwoOnePattern.indexOf("Mababa") / 8));
+        Log.w("index", "" + findTwoOnePattern.indexOf("Mababa") + "|" + findTwoOnePattern.indexOf("Mbabab"));
         if (findTwoOnePattern.contains("Mbabab") || findTwoOnePattern.contains("bababM")) {
             retString = retString.replace("1", "q").replace("a", "e").replace("0", "w")
                     .replace("2", "1").replace("b", "a").replace("3", "0")
                     .replace("q", "2").replace("e", "b").replace("w", "3");
 
-            retString=new StringBuilder(retString).reverse().toString().substring(1);
+            retString = new StringBuilder(retString).reverse().toString().substring(1);
         }
 
-        Log.w("index",""+rollIndex);
+        Log.w("index", "" + rollIndex);
 
-        String trimRetStr="";
-        for(int i=0;i<8;i++){
-            for(int j=0;j<8;j++){
-                trimRetStr+=retString.charAt(i*9+(j+rollIndex)%8);
+        String trimRetStr = "";
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                trimRetStr += retString.charAt(i * 9 + (j + rollIndex) % 8);
             }
         }
-        Log.w("trimStr:",trimRetStr.replace("M","").replace("\n","").replace("a","").replace("b",""));
-        retString=retString.replace("M","");
-        if(retString.charAt(0)=='\n')
-            retString=retString.substring(1);
+        Log.w("trimStr:", trimRetStr = trimRetStr.replace("M", "").replace("\n", "").replace("a", "").replace("b", ""));
+        //test rs coding
+//        int[] rscode = {3, 9, 6, 3, 8, 9, 10, 7,0,13,1,5};
+//        int[] rscode1 = {3, 9, 6, 3, 8, 3, 10, 7,0,13,1,5};
+//        ReedSolomonDecoder reedSolomonDecoder=new ReedSolomonDecoder(GenericGF.AZTEC_PARAM);
+//        ReedSolomonEncoder reedSolomonEncoder=new ReedSolomonEncoder(GenericGF.AZTEC_PARAM);
+//        reedSolomonEncoder.encode(rscode,4);
+//        for(int i=0;i< rscode.length;i++){
+//            Log.w("rs:",""+rscode[i]);
+//        }
+//        reedSolomonDecoder.decode(rscode1,4);
+//        for(int i=0;i<rscode1.length;i++){
+//            Log.w("rs1:",""+rscode1[i]);
+//        }
+//        Log.w("equal:",""+ Arrays.equals(rscode,rscode1));
+        RSDecoder rs=new RSDecoder();
+        Log.w("jni: !!!",""+rs.addInt(5,5));
+
+//        int[] input = {14, 12, 1, 2, 3, 9, 6, 3, 8, 9, 10, 7, 10, 6, 10, 13, 7, 10, 12, 1, 10, 1, 1, 9};
+        int[] input={
+
+                0, 0, 1, 2, 3 ,3, 2,
+                0, 3, 2, 0, 2 ,3, 1,
+                1, 2, 2, 0, 0, 1 ,1,
+                0, 1, 3, 1, 3, 3 ,0,
+                0, 2, 1, 1, 2, 1, 1,
+                0, 0, 0, 2, 1, 1, 0,
+                3, 0, 1, 2, 0, 2, 0
+        };
+
+        int[] result=new int[16];
+        int type=rs.decodeRS(input,result);
+
+        for(int i=0;i<16;i++){
+            Log.w("rs:",""+result[i]);
+        }
+        Log.w("type:",""+type);
+        //
+        retString = retString.replace("M", "");
+        if (retString.charAt(0) == '\n')
+            retString = retString.substring(1);
         return retString;
     }
 
@@ -2093,4 +2167,5 @@ public class testdecode extends Activity implements Runnable {
         changePixelCenter[3][0] = 0;
         changePixelCenter[3][1] = -1;
     }
+
 }
