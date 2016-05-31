@@ -1,40 +1,52 @@
-package com.example.testdecode;
+package com.example.testdecode.activity;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.FeatureInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+
+import com.example.testdecode.MyApplication;
+import com.example.testdecode.R;
 
 public class MainActivity extends Activity {
-    /**
-     * Called when the activity is first created.
-     */
+    private final int SPLASH_DISPLAY_LENGTH = 2000;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
-        Start();
-    }
-
-    public void Start() {
-        new Thread() {
+        StartAnimations();
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
             public void run() {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 setParament();
-                Intent intent = new Intent(MainActivity.this, testdecode.class);
+                Intent intent = new Intent(MainActivity.this, DecodeActivity.class);
                 startActivity(intent);
                 finish();
             }
-        }.start();
+        }, SPLASH_DISPLAY_LENGTH);
+    }
+
+    private void StartAnimations() {
+        Animation anim = AnimationUtils.loadAnimation(this, R.anim.translate);
+        anim.reset();
+        ImageView iv = (ImageView) findViewById(R.id.splashscreen);
+        iv.clearAnimation();
+        iv.startAnimation(anim);
+
     }
 
 

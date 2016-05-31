@@ -1,13 +1,12 @@
-package com.example.testdecode;
+package com.example.testdecode.entity;
 
 /**
  * Created by Ruiming Huang on 3/8/2016.
  */
 public class Point implements Comparable<Point> {
-    double centX;
-    double centY;
-
-    double distance;
+    private double centX;
+    private double centY;
+    private double distance;
 
     public Point(double centX, double centY) {
         this.centX = centX;
@@ -28,6 +27,14 @@ public class Point implements Comparable<Point> {
 
     public void setCentY(double centY) {
         this.centY = centY;
+    }
+
+    public double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(double distance) {
+        this.distance = distance;
     }
 
     public void setDistanceTo(Point pb) {

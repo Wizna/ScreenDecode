@@ -6,34 +6,30 @@ import android.app.Application;
 public class MyApplication extends Application {
 
     private static boolean isProgramExit = false;
-
-    public void setExit(boolean exit) {
-        isProgramExit = exit;
-    }
+    private static boolean isHaveFlashlight = false;
+    private static boolean isHaveSDcard = true;
 
     public boolean isExit() {
         return isProgramExit;
     }
 
-
-    private static boolean isHaveFlashlight = false;
-
-    public void setFlashlightBool(boolean exit) {
-        isHaveFlashlight = exit;
+    public void setExit(boolean exit) {
+        isProgramExit = exit;
     }
 
     public boolean getFlashlightBool() {
         return isHaveFlashlight;
     }
 
-
-    private static boolean isHaveSDcard = true;
-
-    public void setSDcardBool(boolean exit) {
-        isHaveSDcard = exit;
+    public void setFlashlightBool(boolean exit) {
+        isHaveFlashlight = exit;
     }
 
     public boolean getSDcardBool() {
         return isHaveSDcard;
+    }
+
+    public void setSDcardBool(boolean exit) {
+        isHaveSDcard = exit;
     }
 }

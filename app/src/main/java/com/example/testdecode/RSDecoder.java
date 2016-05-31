@@ -8,7 +8,8 @@ public class RSDecoder {
     static { //载入名为“lb”的C++库
         System.loadLibrary("lb");
     }
+
     public native int addInt(int a, int b);
 
-    public native int decodeRS(int[] input,int[] ret);
+    public native int decodeRS(int[] input, int[] ret);
 }

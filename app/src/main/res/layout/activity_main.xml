@@ -1,7 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/linearLayoutMain"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="horizontal"
-    android:background="@drawable/welcome" >
-</LinearLayout>
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/splashscreen"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_gravity="center"
+        android:src="@drawable/splash" />
+
+    <TextView
+        android:id="@+id/myImageViewText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/splashscreen"
+        android:layout_alignTop="@id/splashscreen"
+        android:layout_alignRight="@id/splashscreen"
+        android:layout_alignBottom="@id/splashscreen"
+        android:layout_margin="1dp"
+        android:gravity="center"
+        android:typeface="serif"
+        android:textSize="30dp"
+        android:textStyle="bold"
+        android:text="Invisible Barcode"
+        android:textColor="#FFFFFF" />
+
+</RelativeLayout>
