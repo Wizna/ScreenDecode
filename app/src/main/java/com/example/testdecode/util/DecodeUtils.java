@@ -20,7 +20,9 @@ import java.util.Collections;
  */
 public class DecodeUtils {
 
+    private static final String TAG = "DecodeProcess";
     private static final int[][] config = {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}};
+    private static final int[][] changePixelCenter = {{1,0},{0,1},{-1,0},{0,-1}};
 
     public static String decodeBitMapForFive(BinaryBitmap bitmap, Bitmap grayMap) throws NotFoundException {
         long[] times = new long[10];
@@ -58,9 +60,6 @@ public class DecodeUtils {
         times[1] = System.currentTimeMillis();
         Log.w("before rotate ", "" + bitMapWidth + "|" + bitMapHeight);
 
-
-        int[][] changePixelCenter = new int[4][2];
-        initialTourPixel(changePixelCenter);
         //find theta, with finding nearest points and extend, first find points' x and y
         for (int j = 0; j < bitMapWidth; j++) {
             for (int i = 0; i < bitMapHeight; i++) {
@@ -607,8 +606,6 @@ public class DecodeUtils {
         Log.w("before rotate ", "" + bitMapWidth + "|" + bitMapHeight);
 
 
-        int[][] changePixelCenter = new int[4][2];
-        initialTourPixel(changePixelCenter);
         //find theta, with finding nearest points and extend, first find points' x and y
         for (int j = 0; j < bitMapWidth; j++) {
             for (int i = 0; i < bitMapHeight; i++) {
@@ -1095,7 +1092,7 @@ public class DecodeUtils {
         return retString;
     }
 
-    //decode function for 7*7, with 1,0 coding
+    //decode function for 7*7, with 0~3 coding
     public static String decodeBitMap(BinaryBitmap bitmap, Bitmap grayMap) throws NotFoundException, ReedSolomonException {
         long[] times = new long[10];
         times[0] = System.currentTimeMillis();
@@ -1106,14 +1103,9 @@ public class DecodeUtils {
         int indexJ = 0;
         boolean alreadyOne = false;
         boolean lineChange = false;
-
-        //now add find direction and chose edge line
         ArrayList<Point> pointArrayList = new ArrayList<>();
 
-        //try zxing binarization
         BitMatrix binaryMatrix = bitmap.getBlackMatrix();
-
-        //get bitmap from bitmatrix
         int bitMapWidth = binaryMatrix.getWidth();
         int bitMapHeight = binaryMatrix.getHeight();
 
@@ -1132,9 +1124,6 @@ public class DecodeUtils {
         times[1] = System.currentTimeMillis();
         Log.w("before rotate ", "" + bitMapWidth + "|" + bitMapHeight);
 
-        int[][] changePixelCenter = new int[4][2];
-        initialTourPixel(changePixelCenter);
-        //find theta, with finding nearest points and extend, first find points' x and y
         for (int j = 0; j < bitMapWidth; j++) {
             for (int i = 0; i < bitMapHeight; i++) {
                 if (!whetherChecked[i][j] && (0xF & pixels[(bitMapHeight - 1 - i) * bitMapWidth + j]) != 0) {
@@ -1197,7 +1186,7 @@ public class DecodeUtils {
             return "not enough points";
         }
         times[2] = System.currentTimeMillis();
-        //finding theta
+        //find theta
         double foundTheta = 0;
         boolean whetherFound = false;
         int countSelectingPoint = 0;
@@ -1234,12 +1223,6 @@ public class DecodeUtils {
                         whetherFound = true;
 
                         foundTheta = Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) / Math.PI * 180;
-//                        System.out.println(Math.atan((fourPoints[m][1] - fourPoints[n][1]) / (fourPoints[m][0] - fourPoints[n][0])) / Math.PI * 180);
-//                        System.out.print(midPoint.getCentX() + "|" + midPoint.getCentY() + "\n" +
-//                                possiblePoints[0].getCentX() + "|" + possiblePoints[0].getCentY() + "\n" +
-//                                possiblePoints[1].getCentX() + "|" + possiblePoints[1].getCentY() + "\n" +
-//                                pointArrayList.get(m + 1).getCentX() + "|" + pointArrayList.get(m + 1).getCentY() + "\n" +
-//                                pointArrayList.get(n + 1).getCentX() + "|" + pointArrayList.get(n + 1).getCentY() + "\n");
                         break;
                     }
                 }
@@ -1261,10 +1244,9 @@ public class DecodeUtils {
         whetherChecked = new boolean[grayMap.getHeight()][grayMap.getWidth()];
         bitMapWidth = grayMap.getWidth();
         bitMapHeight = grayMap.getHeight();
-        Log.w("after rotate ", "" + grayMap.getWidth() + "|" + grayMap.getHeight());
+//        Log.w("after rotate ", "" + grayMap.getWidth() + "|" + grayMap.getHeight());
 
         //now start finding points after rotate
-        //This one can be deleted and use getpixels of bitmap
         pixels = new int[grayMap.getWidth() * grayMap.getHeight()];
         grayMap.getPixels(pixels, 0, bitMapWidth, 0, 0, bitMapWidth, bitMapHeight);
         times[5] = System.currentTimeMillis();
@@ -1331,12 +1313,12 @@ public class DecodeUtils {
                     float centX = ((float) xs + xe) / 2;
                     float centY = ((float) ys + ye) / 2;
 
-                    //remove spots
+                    //remove small spots
                     if (Math.abs(xe - xs) < 2 && Math.abs(ye - ys) < 2) {
-                        Log.w("removed:", " too small:" + centX + "|" + centY);
+//                        Log.w("removed:", " too small:" + centX + "|" + centY);
                         continue;
                     }
-                    //the second half is to make segment line into one
+                    //the second half check is to make segment line into one
                     if (firstRound || (centX - points[0][0][0] < 0.1 * interval)) {
                         points[indexI][indexJ][0] = centX;
                         points[indexI][indexJ][1] = centY;
@@ -1378,7 +1360,6 @@ public class DecodeUtils {
             }
             if (!lineChange && alreadyOne && firstRound) {
                 firstRound = false;
-                //sort
                 sortPoints(points);
                 for (int i = 0; i < 60; i++) {
                     if (points[0][i][0] == points[59][59][0] && points[0][i][1] == points[59][59][1] && i > 0) {
@@ -1411,7 +1392,7 @@ public class DecodeUtils {
         }
 
         times[6] = System.currentTimeMillis();
-        //add perspective transform, 400 is the possible points in the picture, can vary for different phones
+        //add perspective transform, 0~400 is the possible points in the picture, can vary for different phones
         float[] xValues = new float[120];
         float[] yValues = new float[120];
 
@@ -1470,7 +1451,6 @@ public class DecodeUtils {
         for (int i = 0; i < 2000; i++) {
             if (xArrayValues[i] == 0f && yArrayValues[i] == 0f)
                 break;
-            //now add decision on where to place the points
             for (int m = foundStartPoint; m < (60 - 1); m++) {
                 if (points[0][m + 1][1] == points[59][59][1] && (Math.abs(yArrayValues[i] - points[0][m][1]) > 0.5 * interval)) {
                     break;
@@ -1485,7 +1465,7 @@ public class DecodeUtils {
                         indexI = (int) floorIndexI;
 
                     if (indexI <= 0) {
-                        Log.w("unbelievable:", "" + indexI + "|" + xArrayValues[i] + "|" + points[0][m][0]);
+                        Log.w(TAG," not proper points that has bad indexI, " + indexI + "|" + xArrayValues[i] + "|" + points[0][m][0]);
 
                     } else if (indexI < 60 && ((points[indexI][m][0] == points[59][59][0] && points[indexI][m][1] == points[59][59][1])
                             || (m == 0 && yArrayValues[i] > points[indexI][m][1]))) {
@@ -1513,7 +1493,8 @@ public class DecodeUtils {
                     continue;
                 }
 
-                double shreshhold = 3.88;//14.8 is from experience
+                //from experience
+                double shreshhold = 3.88;
 
                 if (points[i][j][0] < expectX - shreshhold / 2) {
                     if (points[i][j][1] < expectY) {
@@ -1548,7 +1529,7 @@ public class DecodeUtils {
             retString += "\n";
         }
 
-        Log.w("retstr:", retString);
+//        Log.w("retstr:", retString);
         String findTwoOnePattern = "";
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -1556,7 +1537,7 @@ public class DecodeUtils {
             }
         }
         RSDecoder rs = new RSDecoder();
-        Log.w("pre-findtwo:", findTwoOnePattern);
+//        Log.w("pre-findtwo:", findTwoOnePattern);
         if (findTwoOnePattern.contains("Mb") || findTwoOnePattern.contains("bM")) {
             findTwoOnePattern = findTwoOnePattern.replace("1", "q").replace("a", "e").replace("0", "w")
                     .replace("2", "1").replace("b", "a").replace("3", "0")
@@ -1568,10 +1549,10 @@ public class DecodeUtils {
         if (findMA < 0)
             return "findMA:" + findMA;
 
-        Log.w("post-findtwo:", findTwoOnePattern);
+//        Log.w("post-findtwo:", findTwoOnePattern);
         findTwoOnePattern = findTwoOnePattern.substring(findMA) + findTwoOnePattern.substring(0, findMA);
         findTwoOnePattern = findTwoOnePattern.replace("abababa", "").replace("a", "3").replace("b", "2").replace("M", "");
-        Log.w("final-findtwoone:", findTwoOnePattern);
+//        Log.w("final-findtwoone:", findTwoOnePattern);
         findTwoOnePattern = findTwoOnePattern.replace("*", "1");
         String tempFindTwoOne = "";
         for (int i = 0; i < 7; i++) {
@@ -1617,18 +1598,6 @@ public class DecodeUtils {
         }
         return -1;
     }
-
-    public static void initialTourPixel(int[][] changePixelCenter) {
-        changePixelCenter[0][0] = 1;
-        changePixelCenter[0][1] = 0;
-        changePixelCenter[1][0] = 0;
-        changePixelCenter[1][1] = 1;
-        changePixelCenter[2][0] = -1;
-        changePixelCenter[2][1] = 0;
-        changePixelCenter[3][0] = 0;
-        changePixelCenter[3][1] = -1;
-    }
-
 
     public static void swapPoints(int i1, int j1, int i2, int j2, float[][][] points) {
         float tempX = points[i1][j1][0];

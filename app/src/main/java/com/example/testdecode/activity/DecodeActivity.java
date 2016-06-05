@@ -49,7 +49,7 @@ public class DecodeActivity extends Activity implements Runnable {
     int screenWidth;
     int screenHeight;
     AudioManager audioManager;
-    Bitmap mBitmap;
+    Bitmap greyScaleBitmap;
     PlanarYUVLuminanceSource source;
     byte[] tempData;
     Thread t1;
@@ -299,14 +299,12 @@ public class DecodeActivity extends Activity implements Runnable {
             Log.i(TAG, "DecodeThread");
             source = new PlanarYUVLuminanceSource(
                     tempData, width, height, dstLeft, dstTop, dstWidth, dstHeight);
-            BinaryBitmap bitmap2 = new BinaryBitmap(new HybridBinarizer(source));
-            mBitmap = source.renderCroppedGreyscaleBitmap();
+            BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+            greyScaleBitmap = source.renderCroppedGreyscaleBitmap();
 
             String retString = "";
-            //now add my code to replace original decode process using .so
             try {
-                retString = DecodeUtils.decodeBitMap(bitmap2, mBitmap);
-
+                retString = DecodeUtils.decodeBitMap(bitmap, greyScaleBitmap);
             } catch (NotFoundException | ReedSolomonException e) {
                 e.printStackTrace();
             }
@@ -314,14 +312,13 @@ public class DecodeActivity extends Activity implements Runnable {
             Log.i(TAG, "result " + retString);
 
             if (retString.length()-retString.replace(" ","").length() > 14) {
-                //add to avoid extra out of size
                 Matrix matrix = new Matrix();
                 matrix.preRotate(90);
-                mBitmap = Bitmap.createBitmap(mBitmap, 0, 0, mBitmap.getWidth(),
-                        mBitmap.getHeight(), matrix, true);
+                greyScaleBitmap = Bitmap.createBitmap(greyScaleBitmap, 0, 0, greyScaleBitmap.getWidth(),
+                        greyScaleBitmap.getHeight(), matrix, true);
 
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                greyScaleBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
                 byte[] bytes = stream.toByteArray();
 
                 Intent intent = new Intent(DecodeActivity.this, ScanResultActivity.class);

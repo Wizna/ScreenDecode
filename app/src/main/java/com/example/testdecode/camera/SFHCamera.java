@@ -86,7 +86,7 @@ public class SFHCamera implements SurfaceHolder.Callback {
             mCamera.release();
             mCamera = null;
         } catch (Exception e) {
-            Log.e("camera-1", e.getMessage());
+            Log.e("camera-3", e.getMessage());
         }
     }
 
@@ -107,7 +107,6 @@ public class SFHCamera implements SurfaceHolder.Callback {
     @Override
     public void surfaceDestroyed(SurfaceHolder arg0) {
         if (mCamera != null) {
-            //mCamera.setPreviewCallback(null);
             mCamera.stopPreview();
             mCamera = null;
             Log.i("Camera", "surfaceDestroyed");
@@ -152,8 +151,6 @@ public class SFHCamera implements SurfaceHolder.Callback {
         }
     }
 
-
-    ///////////////////////////////////////////////////
     private Size getOptimalPreviewSize(List<Size> sizes, int w, int h) {
         final double ASPECT_TOLERANCE = 0.1;
         double targetRatio = (double) w / h;
@@ -162,9 +159,8 @@ public class SFHCamera implements SurfaceHolder.Callback {
         Size optimalSize = null;
         double minDiff = Double.MAX_VALUE;
 
-        // Try to find an size match aspect ratio and size
+        // Try to find a size match aspect ratio and size
         for (Size size : sizes) {
-            Log.i("SFHCamera", "Sizes: " + size.width + " " + size.height);
             double ratio = (double) size.width / size.height;
             if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
             if (Math.abs(size.height - h) < minDiff) {

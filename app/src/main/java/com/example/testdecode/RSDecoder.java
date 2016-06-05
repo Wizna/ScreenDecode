@@ -9,6 +9,7 @@ public class RSDecoder {
         System.loadLibrary("lb");
     }
 
+    //just use to test c code
     public native int addInt(int a, int b);
 
     public native int decodeRS(int[] input, int[] ret);
